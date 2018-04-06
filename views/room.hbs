@@ -1,3 +1,114 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
+
 <div>
-    <h2>Playing in room: {{room}}</h2>
+    <p id="players">Players: </p>
 </div>
+<hr>
+<div>
+    <input id="nickname-box" autocomplete="off" />
+    <button id="nickname-btn">Set Nickname</button>
+</div>
+<hr>
+<div class="messages">
+    <ul id="messages"></ul>
+    <input id="message-box" autocomplete="off" />
+    <button id="message-btn">Send</button>
+</div>
+<hr>
+<div class="log">
+    <ul id="log"></ul>
+</div>
+<hr>
+<pre id="gameState" style="overflow:scroll; height:400px;">
+</pre>
+<hr>
+<div>
+    <ul id="actions"></ul>
+</div>
+
+<script>
+    const socket = io();
+
+    const messages = document.getElementById("messages");
+    const messageBox = document.getElementById("message-box");
+    const messageBtn = document.getElementById("message-btn");
+
+    const log = document.getElementById("log");
+
+    const actions = document.getElementById("actions");
+
+    const gameState = document.getElementById("gameState");
+
+    const nicknameBox = document.getElementById("nickname-box");
+    const nicknameBtn = document.getElementById("nickname-btn");
+
+    const players = document.getElementById("players");
+
+    socket.on('players', (p) => {
+        players.innerHTML = "Players: " + p;
+    });
+
+    socket.emit('join', "{{room}}");
+
+    socket.on('message', (message) => {
+        newMessage(message);
+    });
+
+    socket.on('log', (message) => {
+        newLog(message);
+    });
+
+    socket.on('gameState', (gs) => {
+        gameState.innerHTML = JSON.stringify(gs, null, 2);
+    });
+
+    socket.on('requestAction', (actions) => {
+        actions = JSON.parse(actions);
+        console.log(actions);
+        actions.forEach((action) => {
+            newAction(action);
+        });
+    });
+
+    socket.on('full', () => {
+        window.location = "/rooms";
+    });
+
+    messageBtn.onclick = function() {
+        let message = messageBox.value;
+        messageBox.value = '';
+        socket.emit("message", message, "{{room}}");
+        newMessage("YOU: " + message);
+    };
+
+    nicknameBtn.onclick = function() {
+        let nickname = nicknameBox.value;
+        nicknameBox.value = '';
+        socket.emit("nickname", nickname);
+    };
+
+    function newMessage(message) {
+        let item = document.createElement('li');
+        item.innerHTML = message;
+        messages.appendChild(item);
+    }
+
+    function newLog(message) {
+        let item = document.createElement('li');
+        item.innerHTML = message;
+        log.appendChild(item);
+    }
+
+    function newAction(action) {
+        let item = document.createElement('li');
+        let button = document.createElement('button');
+        item.innerHTML = JSON.stringify(action, null, 2);
+        button.innerHTML = "Do";
+        item.appendChild(button);
+        actions.appendChild(item);
+        button.onclick = function() {
+            actions.innerHTML = "";
+            socket.emit("responseAction", action);
+        }
+    }
+</script>

@@ -2,11 +2,11 @@ var express = require('express');
 var router = express.Router();
 
 var rooms = [
-        {name: "Test1", description: "Star Realms 2 Player", id: "a123", players: 2, playing: 1},
-        {name: "Room2", description: "Dominion 4 Player", id: "qwertyuio",  players: 4, playing: 3, viewers: 10}
+        {name: "Room1", description: "Star Realms 2 Player", id: "room1", players: 2, playing: 0, viewers: 0},
+        {name: "Room2", description: "Star Realms 4 Player", id: "room2",  players: 4, playing: 0, viewers: 0}
     ];
 
-var ids = ["a123", "qwertyuio"];
+var ids = ["room1", "room2"];
 
 router.get('/', function(req, res, next) {
     res.render('rooms/index', { rooms: rooms });

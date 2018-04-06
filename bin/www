@@ -22,6 +22,17 @@ app.set('port', port);
 var server = http.createServer(app);
 
 /**
+ * Create GameManager.
+ */
+const gameManager = new (require('../game/gameManager'))();
+
+/**
+ * Create socket.io.
+ */
+const io = require('socket.io')(server, {wsEngine: 'ws'}); // default wsEngine is very slow
+require('../io')(io, gameManager);
+
+/**
  * Listen on provided port, on all network interfaces.
  */
 

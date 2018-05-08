@@ -34,6 +34,8 @@ module.exports = {
         switch (gameState.phase) {
             case "play":
                 actions.push(...this.playingActions(gameState));
+                actions.push(...this.cardAbilities(gameState));
+                actions.push(...this.combatActions(gameState));
                 actions.push(this.endAction());
                 break;
             case "discard":
@@ -54,10 +56,23 @@ module.exports = {
         switch (action.action) {
             case 'play':
                 events.playHand(gameState, gameState.playing, action.index);
-                break;
+                return 'Play ' + action.card;
+            case "ability":
+                events.activateAbility(gameState, gameState.playing, action.index, action.ability);
+                return 'Ability ' + action.card + ' ' + action.ability;
+            case "combat":
+                if (action.target === "player") {
+                    events.updateCounter(gameState, action.player, "authority", -action.damage);
+                    events.updateCounter(gameState, gameState.playing, "combat", -action.damage);
+                } else if (action.target === "card") {
+                    events.attackCard(gameState, action.player, action.index);
+                    events.updateCounter(gameState, gameState.playing, "combat", -action.damage);
+                }
+                return "Combat";
+            case "buy":
+                return "Buy";
             case 'end':
-                // run on phase end functionality
-
+                let phase = gameState.phase;
                 // go to next phase
                 let newTurn = events.nextPhase(gameState, this.phases);
                 this.onPhaseStart(gameState);
@@ -65,12 +80,13 @@ module.exports = {
                     this.onTurnStart(gameState);
                 }
                 console.log("End Phase");
-                break;
+                return "End " + phase + " phase";
             // case "draw":
             //     events.drawDeck(gameState, gameState.playing, 5);
             //     break;
             default:
-                console.log("Error: invalid action")
+                console.log("Error: invalid action");
+                return "Invalid Action";
         }
     },
 
@@ -79,6 +95,9 @@ module.exports = {
             case "draw":
                 events.drawDeck(gameState, gameState.playing, 5);
                 break;
+            case "discard":
+                events.setCounter(gameState, gameState.playing, "trade", 0);
+                events.setCounter(gameState, gameState.playing, "combat", 0);
             default:
                 break;
         }
@@ -86,9 +105,7 @@ module.exports = {
 
     onTurnStart: function(gameState) {
         let winner = this.endCheck(gameState);
-        console.log("WINNER: " + winner);
         if (winner !== null) {
-            console.log("Winner: " + winner);
             events.gameOver(gameState, winner);
         }
     },
@@ -118,14 +135,13 @@ module.exports = {
     },
 
     endCheck: function(gameState) {
-        console.log("END CHECK");
-        let winner = null;
+        let alive = [];
         Object.keys(gameState.players).forEach((id) => {
-            if (gameState.players[id].points >= 20) {
-                winner = id;
+            if (gameState.players[id].authority > 0) {
+                alive.push(id);
             }
         });
-        return winner;
+        return (alive.length === 1) ? alive[0] : null;
     },
 
 
@@ -140,6 +156,73 @@ module.exports = {
                 index: index
             })
         });
+        return actions;
+    },
+
+    cardAbilities: function(gameState) {
+        let actions = [];
+        gameState.players[gameState.playing].inPlay.forEach((card, index) => {
+            card.availableAbilities().forEach((ability) => {
+                actions.push({
+                    action: "ability",
+                    ability: ability,
+                    card: card.name,
+                    index: index
+                });
+            });
+        });
+        return actions;
+    },
+
+    combatActions: function(gameState) {
+        let actions = [];
+        let combat = gameState.players[gameState.playing].combat;
+        Object.keys(gameState.players).forEach((id) => {
+            let bases = [];
+            let outposts = [];
+            if (id !== gameState.playing) {
+                gameState.players[id].inPlay.forEach((card, index) => {
+                    if (card.defense <= combat) {
+                        if (card.types.has("outpost")) {
+                            outposts.push({card, index});
+                        } else {
+                            bases.push({card, index});
+                        }
+                    }
+                });
+                outposts.forEach((outpost) => {
+                    actions.push({
+                        action: "combat",
+                        target: "card",
+                        player: id,
+                        damage: outpost.card.defense,
+                        card: outpost.card.name,
+                        index: outpost.index
+                    });
+                });
+                if (outposts.length === 0) {
+                    bases.forEach((base) => {
+                        actions.push({
+                            action: "combat",
+                            target: "card",
+                            player: id,
+                            damage: base.card.defense,
+                            card: base.card.name,
+                            index: base.index
+                        });
+                    });
+                    if (combat > 0) {
+                        actions.push({
+                            action: "combat",
+                            target: "player",
+                            player: id,
+                            damage: combat
+                        });
+                    }
+                }
+            }
+        });
+        console.log(actions);
         return actions;
     },
 

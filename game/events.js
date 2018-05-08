@@ -1,24 +1,38 @@
 // common events that can occur to a gameState
 
 module.exports = {
-    discardHand(player, index, gameState) {
+    discardHand(gameState, player, index) {
+        console.log(player + " : " + index);
         let card = gameState.players[player].hand[index];
         gameState.players[player].hand.splice(index, 1);
         gameState.players[player].discard.push(card);
     },
 
-    discardHand(gameState, player) {
-        gameState.players[player].discard.push(...gameState.players[player].hand);
-        gameState.players[player].hand = [];
-    },
+    // discardHand(gameState, player) {
+    //     gameState.players[player].discard.push(...gameState.players[player].hand);
+    //     gameState.players[player].hand = [];
+    // },
 
     discardInPlay(gameState, player) {
         gameState.players[player].discard.push(...gameState.players[player].inPlay);
         gameState.players[player].inPlay = [];
     },
 
+    discardInPlay(gameState, player, index) {
+        gameState.players[player].discard.push(...gameState.players[player].inPlay.splice(index, 1));
+    },
+
     playHand(gameState, player, index) {
-        gameState.players[player].hand[index].onPlay(gameState);
+        // card onPlay
+        let playedCard =  gameState.players[player].hand[index];
+        playedCard.onPlay(gameState);
+
+        // all inPlay cards onOtherPlay
+        gameState.players[player].inPlay.forEach((card) => {
+            card.onOtherPlay(gameState, playedCard);
+        });
+
+        // move card from hand to in play
         gameState.players[player].inPlay.push(...gameState.players[player].hand.splice(index, 1));
     },
 
@@ -36,6 +50,10 @@ module.exports = {
             this.drawDeck(gameState, player, amount - cards.length);
         }
 
+    },
+
+    activateAbility(gameState, player, index, ability) {
+        gameState.players[player].inPlay[index].onActivate(gameState, ability);
     },
 
     nextPhase(gameState, phases) {
@@ -99,10 +117,34 @@ module.exports = {
         gameState.players[player][counter] += value;
     },
 
+    setCounter: function(gameState, player, counter, value) {
+        gameState.players[player][counter] = value;
+    },
+
     gameOver: function(gameState, winner) {
         gameState.phase = "gameOver";
         gameState.playing = null;
         gameState.winner = winner;
+    },
+
+    /**
+     * Combat Events
+     */
+
+    attackCard: function(gameState, targetPlayer, targetIndex) {
+        gameState.players[targetPlayer].inPlay[targetIndex].onDestroyed(gameState);
+        this.discardInPlay(gameState, targetPlayer, targetIndex);
+    },
+
+    /**
+     * Decision Events
+     */
+    addDecision: function(gameState, player, choices, callback) {
+        console.log("ADDED DECISION PLAYER: " + player);
+        gameState.decision = true;
+        gameState.deciding = player;
+        gameState.decisionCallback = callback;
+        gameState.choices = choices;
     }
 
 };

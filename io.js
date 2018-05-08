@@ -42,9 +42,13 @@ module.exports = (io, gameManager) => {
             });
         });
         socket.on('responseAction', (action) => {
-            console.log("ACTION: " + action);
             if (socket.room) {
                 gameManager.getGame(socket.room).handleAction(action);
+            }
+        });
+        socket.on('responseDecision', (choice) => {
+            if (socket.room) {
+                gameManager.getGame(socket.room).handleDecision(choice);
             }
         });
         socket.on('nickname', (nickname) => {

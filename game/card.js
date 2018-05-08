@@ -19,6 +19,10 @@ module.exports =  class Card {
         return this.location;
     }
 
+    availableAbilities() {
+        return [];
+    }
+
     // abstract functions
     onPlay(gameState) {
         throw new Error("Abstract function Card.onPlay used");

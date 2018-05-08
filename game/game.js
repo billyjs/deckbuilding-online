@@ -8,9 +8,8 @@ module.exports = class Game {
         this.running = false;
 
         // current valid actions
-        this.actions = null;
+        this.actions = [];
 
-        // bro put this last
         this.startGame();
     }
 
@@ -23,33 +22,66 @@ module.exports = class Game {
 
     requestAction() {
         this.sendGameState();
+
+        // gameState.decision = true;
+        // gameState.decisionCallback = callback;
+        // gameState.choices = choices;
         this.actions = this.rules.makeActions(this.gameState);
-        console.log(this.actions.length);
-        if (this.actions.length === 1) {
-            // if only 1 action do it automatically
-            this.handleAction(this.actions[0]);
-        } else if (this.actions.length === 0) {
-            // error if no actions available
-        } else {
-            // if multiple actions let player choose
-            this.io.sockets.connected[this.gameState.playing].emit('requestAction', JSON.stringify(this.actions));
+
+        switch(this.actions.length) {
+            case 0:
+                break;
+            case 1:
+                this.handleAction(this.actions[0]);
+                break;
+            default:
+                this.io.sockets.connected[this.gameState.playing].emit('requestAction', JSON.stringify(this.actions));
+                break;
         }
     }
 
     handleAction(action) {
-        // if (actions.indexOf(action) === -1) {
-        //     // invalid action
-        //     console.log("Invalid action: " + action);
-        // } else {
-        //     // do action
-        //     this.running = this.rules.applyAction(this.gameState, action);
-        // }
         // TODO: Validate action is correct player and valid action
-        this.rules.applyAction(this.gameState, action);
 
-        // after action is handled request a new one
+        let log = this.rules.applyAction(this.gameState, action);
+        this.all().emit('log', 'Action: ' + log);
+        this.next();
+
+    }
+
+    requestDecision() {
+        this.sendGameState();
+        let choices = this.gameState.choices;
+        switch(choices.length) {
+            case 0:
+                break;
+            case 1:
+                this.handleDecision(choices[0]);
+                break;
+            default:
+                this.io.sockets.connected[this.gameState.deciding].emit('requestDecision', JSON.stringify(choices));
+                break;
+        }
+    }
+
+    handleDecision(choice) {
+        // TODO: validate decision
+
+        this.gameState.decisionCallback(choice.value);
+        this.all().emit('log', 'Decision: ' + choice.name);
+
+        this.next();
+
+    }
+
+    next() {
         if (this.gameState.phase !== "gameOver") {
-            this.requestAction();
+            if (this.gameState.decision) {
+                this.requestDecision();
+                this.gameState.decision = false;
+            } else {
+                this.requestAction();
+            }
         } else {
             this.sendGameState();
         }

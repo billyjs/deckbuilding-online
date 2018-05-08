@@ -15,7 +15,7 @@
     <button id="message-btn">Send</button>
 </div>
 <hr>
-<div class="log">
+<div class="log" style="overflow:scroll; height:100px;">
     <ul id="log"></ul>
 </div>
 <hr>
@@ -70,6 +70,13 @@
         });
     });
 
+    socket.on('requestDecision', (choices) => {
+        choices = JSON.parse(choices);
+        choices.forEach((choice) => {
+            newChoice(choice);
+        });
+    });
+
     socket.on('full', () => {
         window.location = "/rooms";
     });
@@ -109,6 +116,19 @@
         button.onclick = function() {
             actions.innerHTML = "";
             socket.emit("responseAction", action);
+        }
+    }
+
+    function newChoice(choice) {
+        let item = document.createElement('li');
+        let button = document.createElement('button');
+        item.innerHTML = JSON.stringify(choice, null, 2);
+        button.innerHTML = "Do";
+        item.appendChild(button);
+        actions.appendChild(item);
+        button.onclick = function() {
+            actions.innerHTML = "";
+            socket.emit("responseDecision", choice);
         }
     }
 </script>

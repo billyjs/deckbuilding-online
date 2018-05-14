@@ -10,15 +10,15 @@ module.exports = {
             phase: this.phases[0], // current phase
             playing: players[0], // current player TODO: choose first player better
             players: {},
+            shop: this.startingShop(),
             turn: 1
         };
         players.forEach((player) => {
             state.players[player] = {
-                hand: [], // array of instantiated cards in hand
-                inPlay: [], // array of instantiated cards in play
+                hand: [], // array of instantiated _cards in hand
+                inPlay: [], // array of instantiated _cards in play
                 discard: [], // array of card names in discard
                 deck: this.startingDeck(player), // array of card names in deck
-
                 points: 0,
                 authority: 50,
                 combat: 0,
@@ -36,6 +36,7 @@ module.exports = {
                 actions.push(...this.playingActions(gameState));
                 actions.push(...this.cardAbilities(gameState));
                 actions.push(...this.combatActions(gameState));
+                actions.push(...this.buyActions(gameState));
                 actions.push(this.endAction());
                 break;
             case "discard":
@@ -70,6 +71,27 @@ module.exports = {
                 }
                 return "Combat";
             case "buy":
+                let card = null;
+                switch(action.target) {
+                    case "tradeRow":
+                        // get card from trade row in shop
+                        card = events.fromShopRow(gameState, cards, gameState.playing, 'tradeRow', action.index);
+                        // add card to players hand
+                        events.toDiscard(gameState, gameState.playing, card);
+                        // remove trade cost from player
+                        events.updateCounter(gameState, gameState.playing, 'trade', -card.cost);
+                        break;
+                    case "explorers":
+                        // get card from trade row in shop
+                        card = events.fromShopPile(gameState, cards, gameState.playing, 'explorers');
+                        // add card to players hand
+                        events.toDiscard(gameState, gameState.playing, card);
+                        // remove trade cost from player
+                        events.updateCounter(gameState, gameState.playing, 'trade', -card.cost);
+                        break;
+                    default:
+                        break;
+                }
                 return "Buy";
             case 'end':
                 let phase = gameState.phase;
@@ -159,6 +181,33 @@ module.exports = {
         return actions;
     },
 
+    buyActions: function(gameState) {
+        let actions = [];
+        let trade = gameState.players[gameState.playing].trade;
+        Object.keys(gameState.shop).forEach((key) => {
+            let source = gameState.shop[key];
+            // if trade pile and has _cards left
+            if (source.amount > 0 && cards._costEnum[source.cardName] <= trade) {
+                actions.push({
+                    action: "buy",
+                    target: key,
+                })
+            }
+            if (source.row) {
+                source.row.forEach((card, index) => {
+                    if (card !== null && cards._costEnum[source.row[index]] <= trade) {
+                        actions.push({
+                            action: "buy",
+                            target: key,
+                            index: index
+                        });
+                    }
+                });
+            }
+        });
+        return actions;
+    },
+
     cardAbilities: function(gameState) {
         let actions = [];
         gameState.players[gameState.playing].inPlay.forEach((card, index) => {
@@ -240,6 +289,26 @@ module.exports = {
             deck.push(new cards.Three(player));
         }
         return deck;
+    },
+
+    startingShop: function() {
+        let shop = {
+            tradeRow: {
+                row: [],
+                deck: [],
+            },
+            explorers: {
+                cardName: "One",
+                amount: 10
+            }
+        };
+        for (let i = 0; i < 10; i++) {
+            shop.tradeRow.deck.push("One");
+            shop.tradeRow.deck.push("Two");
+            shop.tradeRow.deck.push("Three");
+        }
+        shop.tradeRow.row = shop.tradeRow.deck.splice(0, 5);
+        return shop;
     },
 
     firstDraw: function(gameState) {

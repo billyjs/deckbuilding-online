@@ -1,22 +1,21 @@
+const GameState = require("./gameState");
+
 module.exports = class Game {
     constructor(io, gameId, socketIds, rules) {
         this.io = io;
         this.rules = rules;
         this.gameId = gameId;
         this.socketIds = socketIds;
-        this.gameState = null;
-        this.running = false;
+        this.gameState = new GameState(this.socketIds, this.rules);
+        // this._running = false;
 
         // current valid actions
         this.actions = [];
 
-        this.startGame();
-    }
-
-    startGame() {
+        this.gameState.loadRules();
+        this.gameState.firstDraw();
+        // this._running = true;
         this.all().emit('log', 'Game Started');
-        this.gameState = this.rules.getStartingState(this.socketIds);
-        this.running = true;
         this.requestAction();
     }
 
@@ -24,9 +23,10 @@ module.exports = class Game {
         this.sendGameState();
 
         // gameState.decision = true;
-        // gameState.decisionCallback = callback;
-        // gameState.choices = choices;
-        this.actions = this.rules.makeActions(this.gameState);
+        // gameState._decisionCallback = callback;
+        // gameState._choices = _choices;
+        // this.actions = this.rules.makeActions(this.gameState);
+        this.actions = this.gameState.makeActions();
 
         switch(this.actions.length) {
             case 0:
@@ -42,16 +42,16 @@ module.exports = class Game {
 
     handleAction(action) {
         // TODO: Validate action is correct player and valid action
-
-        let log = this.rules.applyAction(this.gameState, action);
-        this.all().emit('log', 'Action: ' + log);
+        let playing = this.gameState.playing;
+        let log = this.gameState.applyAction(action);
+        this.all().emit('log', playing + ' - Action: ' + log);
         this.next();
 
     }
 
     requestDecision() {
         this.sendGameState();
-        let choices = this.gameState.choices;
+        let choices = this.gameState._choices;
         switch(choices.length) {
             case 0:
                 break;
@@ -67,7 +67,7 @@ module.exports = class Game {
     handleDecision(choice) {
         // TODO: validate decision
 
-        this.gameState.decisionCallback(choice.value);
+        this.gameState._decisionCallback(choice.value);
         this.all().emit('log', 'Decision: ' + choice.name);
 
         this.next();
@@ -75,7 +75,7 @@ module.exports = class Game {
     }
 
     next() {
-        if (this.gameState.phase !== "gameOver") {
+        if (this.gameState._running) {
             if (this.gameState.decision) {
                 this.requestDecision();
                 this.gameState.decision = false;
@@ -89,7 +89,8 @@ module.exports = class Game {
 
     sendGameState() {
         this.socketIds.forEach((socketId) => {
-            this.io.to(socketId).emit('gameState', this.rules.censorGameState(this.gameState, socketId));
+            // this.io.to(socketId).emit('gameState', this.rules.censorGameState(this.gameState, socketId));
+            this.io.to(socketId).emit("gameState", this.gameState.getState(socketId));
         })
     }
 

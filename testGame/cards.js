@@ -9,7 +9,8 @@ const Test = class Test extends Card  {
     }
 
     onPlay(gameState) {
-        events.updateCounter(gameState, this.player, 'points', this.value);
+        gameState.getPlaying().updateCounter('authority', this.value);
+        // events.updateCounter(gameState, this.player, 'points', this.value);
     }
 
     onPhaseStart(gameState, location, index) {
@@ -92,34 +93,43 @@ const Outpost = class Outpost extends Base {
 };
 
 module.exports = {
+    _costEnum: {
+        One: 1,
+        Two: 2,
+        Three: 3,
+        Four: 4,
+    },
+
     One: class One extends Ship {
         constructor(player) {
             super(player);
             this.value = 1;
             this.name = "One";
             this.faction = "none";
+            this.cost = 1;
         }
         onPlay(gameState) {
-            let players = Object.keys(gameState.players);
-            let choices = players.filter((player) => {
-                return player !== this.player;
-            }).map((player) => {
-                return {
-                    name: player,
-                    value: player
-                }
-            });
-            events.addDecision(gameState, this.player, choices, (choice) => {
-                let cs = gameState.players[choice].hand.map((card, index) => {
-                    return {
-                        name: card.name,
-                        value: index
-                    }
-                });
-                events.addDecision(gameState, choice, cs, (c) => {
-                    events.discardHand(gameState, choice, c);
-                });
-            });
+            // let players = Object.keys(gameState.players);
+            // let _choices = players.filter((player) => {
+            //     return player !== this.player;
+            // }).map((player) => {
+            //     return {
+            //         name: player,
+            //         value: player
+            //     }
+            // });
+            // events.addDecision(gameState, this.player, _choices, (choice) => {
+            //     let cs = gameState.players[choice].hand.map((card, index) => {
+            //         return {
+            //             name: card.name,
+            //             value: index
+            //         }
+            //     });
+            //     events.addDecision(gameState, choice, cs, (c) => {
+            //         events.discardHand(gameState, choice, c);
+            //     });
+            // });
+            gameState.getPlaying().updateCounter('trade', this.value);
         }
     },
     Two: class Two extends Ship {
@@ -128,20 +138,23 @@ module.exports = {
             this.value = 2;
             this.name = "Two";
             this.faction = "none";
+            this.cost = 2;
         }
         onPlay(gameState) {
-            events.addDecision(gameState, this.player, [{name: "2 Trade", value: 0}, {name: "3 Combat", value: 1}], (choice) => {
-                switch(choice) {
-                    case 0:
-                        events.updateCounter(gameState, this.player, 'trade', 2);
-                        break;
-                    case 1:
-                        events.updateCounter(gameState, this.player, 'combat', 3);
-                        break;
-                    default:
-                        console.log("Invalid Choice");
-                }
-            });
+            // events.addDecision(gameState, this.player, [{name: "2 Trade", value: 0}, {name: "3 Combat", value: 1}], (choice) => {
+            //     switch(choice) {
+            //         case 0:
+            //             events.updateCounter(gameState, this.player, 'trade', 2);
+            //             break;
+            //         case 1:
+            //             events.updateCounter(gameState, this.player, 'combat', 3);
+            //             break;
+            //         default:
+            //             console.log("Invalid Choice");
+            //     }
+            // });
+
+            gameState.getPlaying().updateCounter('trade', this.value);
         }
     },
     Three: class Three extends Outpost {
@@ -151,6 +164,7 @@ module.exports = {
             this.name = "Three";
             this.defense = 3;
             this.faction = "red";
+            this.cost = 3;
 
             this.primary = true;
             this.ally = true;
@@ -159,7 +173,7 @@ module.exports = {
         }
         onPlay(gameState) {
             this._primaryAbility(gameState);
-            this._checkAlly(gameState, null);
+            // this._checkAlly(gameState, null);
         }
 
         onActivate(gameState, ability) {
@@ -181,14 +195,16 @@ module.exports = {
 
         _primaryAbility(gameState) {
             if (this.primary) {
-                events.updateCounter(gameState, this.player, 'trade', this.value);
+                // events.updateCounter(gameState, this.player, 'trade', this.value);
+                gameState.getPlaying().updateCounter('authority', this.value);
                 this.primary = false;
             }
         }
 
         _allyAbility(gameState) {
             if (this.ally) {
-                events.updateCounter(gameState, this.player, 'combat', this.value);
+                // events.updateCounter(gameState, this.player, 'combat', this.value);
+                gameState.getPlaying().updateCounter('combat', this.value);
                 this.ally = false;
             }
         }
@@ -232,6 +248,7 @@ module.exports = {
             this.value = 4;
             this.name = "Four";
             this.faction = "blue";
+            this.cost = 4;
 
             this.primary = true;
             this.ally = true;
@@ -240,7 +257,7 @@ module.exports = {
         }
         onPlay(gameState) {
             this._primaryAbility(gameState);
-            this._checkAlly(gameState, null);
+            // this._checkAlly(gameState, null);
         }
 
         onActivate(gameState, ability) {
@@ -258,7 +275,8 @@ module.exports = {
 
         _primaryAbility(gameState) {
             if (this.primary) {
-                events.updateCounter(gameState, this.player, 'trade', this.value);
+                // events.updateCounter(gameState, this.player, 'trade', this.value);
+                gameState.getPlaying().updateCounter('trade', this.value);
                 this.primary = false;
             }
         }

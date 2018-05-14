@@ -1,4 +1,5 @@
 // common events that can occur to a gameState
+const helper = require("../helper");
 
 module.exports = {
     discardHand(gameState, player, index) {
@@ -27,7 +28,7 @@ module.exports = {
         let playedCard =  gameState.players[player].hand[index];
         playedCard.onPlay(gameState);
 
-        // all inPlay cards onOtherPlay
+        // all inPlay _cards onOtherPlay
         gameState.players[player].inPlay.forEach((card) => {
             card.onOtherPlay(gameState, playedCard);
         });
@@ -37,13 +38,13 @@ module.exports = {
     },
 
     drawDeck(gameState, player, amount) {
-        // draw cards from deck
+        // draw _cards from deck
         let cards = gameState.players[player].deck.splice(0, amount);
 
         // add to hand
         gameState.players[player].hand.push(...cards);
 
-        // if couldn't draw all cards and cards in discard pile
+        // if couldn't draw all _cards and _cards in discard pile
         // refresh the deck and draw the rest
         if (cards.length < amount && gameState.players[player].discard.length > 0) {
             this.refreshDeck(gameState, player);
@@ -102,15 +103,7 @@ module.exports = {
     },
 
     shuffleDeck(gameState, player) {
-        let deck = gameState.players[player].deck;
-        let counter = deck.length;
-        while (counter > 0) {
-            let index = Math.floor(Math.random() * counter);
-            counter--;
-            let temp = deck[counter];
-            deck[counter] = deck[index];
-            deck[index] = temp;
-        }
+        helper.shuffle(gameState.players[player].deck);
     },
 
     updateCounter: function(gameState, player, counter, value) {
@@ -143,8 +136,52 @@ module.exports = {
         console.log("ADDED DECISION PLAYER: " + player);
         gameState.decision = true;
         gameState.deciding = player;
-        gameState.decisionCallback = callback;
-        gameState.choices = choices;
+        gameState._decisionCallback = callback;
+        gameState._choices = choices;
+    },
+
+
+
+    /**
+     * Get card from a location
+     */
+
+    fromShopRow: function(gameState, cards, player, row, index) {
+        // shop _cards are not instantiated so must be created when acquired
+        let cardName = gameState.shop[row].row[index];
+        let card = new cards[cardName](player);
+
+        // replace the card in the row with the top of the deck
+        gameState.shop[row].row[index] = gameState.shop[row].deck.shift();
+
+        return card;
+    },
+
+    fromShopPile: function(gameState, cards, player, pile) {
+        // shop _cards are not instantiated so must be created when acquired
+        let cardName = gameState.shop[pile].cardName;
+        let card = new cards[cardName](player);
+
+        // decrement pile counter
+        gameState.shop[pile].amount--;
+
+        return card;
+    },
+
+    /**
+     * Put a card in a location
+     */
+
+    toPlayerLocation: function(gameState, player, location, card) {
+        gameState.players[player][location].push(card);
+    },
+
+    toHand: function(gameState, player, card) {
+        gameState.players[player].hand.push(card);
+    },
+
+    toDiscard: function(gameState, player, card) {
+        gameState.players[player].discard.push(card);
     }
 
 };

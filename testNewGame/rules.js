@@ -2,49 +2,23 @@ const cards = require('./cards');
 
 function createStartingDeck() {
     let deck = [];
-    for (let i = 0; i < 8; i++) {
-        deck.push(new cards.Scout());
-    }
-    for (let i = 0; i < 2; i++) {
-        deck.push(new cards.Viper());
+    for (let i = 0; i < 3; i++) {
+        deck.push(new cards.One(null));
+        deck.push(new cards.Two(null));
+        deck.push(new cards.Three(null));
+        deck.push(new cards.Four(null));
     }
     return deck;
 }
 
 function createTradeDeck() {
     let deck = [];
-    // triples
-    for (let i = 0; i < 3; i++) {
-        deck.push("BlobFighter");
-        deck.push("TradePod");
-        deck.push("BlobWheel");
-
-        deck.push("ImperialFighter");
-        deck.push("ImperialFrigate");
-        deck.push("SurveyShip");
+    for (let i = 0; i < 10; i++) {
+        deck.push("One");
+        deck.push("Two");
+        deck.push("Three");
+        deck.push("Four");
     }
-    // doubles
-    for (let i = 0; i < 2; i++) {
-        deck.push("BattlePod");
-        deck.push("Ram");
-        deck.push("BlobDestroyer");
-
-        deck.push("Corvette");
-        deck.push("SpaceStation");
-        deck.push("RecyclingStation");
-    }
-    // singles
-    deck.push("BattleBlob");
-    deck.push("BlobCarrier");
-    deck.push("Mothership");
-    deck.push("TheHive");
-    deck.push("BlobWorld");
-
-    deck.push("Battlecruiser");
-    deck.push("Dreadnaught");
-    deck.push("WarWorld");
-    deck.push("RoyalRedoubt");
-    deck.push("FleetHQ");
     return deck;
 }
 
@@ -129,37 +103,6 @@ function makeCombatActions(gameState) {
     return actions;
 }
 
-function makeBuyActions(gameState) {
-    let actions = [];
-    let trade = gameState.getPlaying().get("trade");
-    // piles
-    Object.keys(gameState.shop.piles).forEach((key) => {
-        let pile = gameState.shop.piles[key];
-        if (pile.amount > 0 && cards._costEnum[pile.cardName] <= trade) {
-            actions.push({
-                action: "buy",
-                target: "pile",
-                pile: key
-            })
-        }
-    });
-    //rows
-    Object.keys(gameState.shop.rows).forEach((key) => {
-        let row = gameState.shop.rows[key];
-        row.row.forEach((card, index) => {
-            if (card && cards._costEnum[row.row[index]] <= trade) {
-                actions.push({
-                    action: "buy",
-                    target: "row",
-                    row: key,
-                    index: index
-                })
-            }
-        })
-    });
-    return actions;
-}
-
 function drawAmount(turn, playerIndex) {
     if (turn === 0 && playerIndex === 0) {
         return 3;
@@ -192,22 +135,9 @@ function actionCombat(gameState, action) {
     }
 }
 
-function actionBuy(gameState, action) {
-    if (action.target === "pile") {
-        let card = gameState.shop.fromPile(action.pile);
-        gameState.getPlaying().toDiscard(card);
-        gameState.getPlaying().updateCounter("trade", -card.cost);
-    } else if (action.target === "row") {
-        let card = gameState.shop.fromRow(action.row, action.index);
-        gameState.getPlaying().toDiscard(card);
-        gameState.getPlaying().updateCounter("trade", -card.cost);
-    }
-}
-
 module.exports = {
-    cards: cards,
     phases: ['play', 'discard', 'draw'],
-    startingDeck: createStartingDeck,
+    startingDeck: createStartingDeck(),
     shop: {
         rows: [{
             name: "tradeRow",
@@ -216,7 +146,7 @@ module.exports = {
         }],
         piles: [{
             name: "explorers",
-            cardName: "Explorer",
+            cardName: "One",
             amount: 10
         }]
     },
@@ -233,10 +163,6 @@ module.exports = {
             {
                 name: "authority",
                 value: 50
-            },
-            {
-                name: "blobs",
-                value: 0
             }
         ]
     },
@@ -253,10 +179,6 @@ module.exports = {
             {
                 phase: "play",
                 func: makeCombatActions
-            },
-            {
-                phase: "play",
-                func: makeBuyActions
             }
         ],
         applications: [
@@ -271,10 +193,6 @@ module.exports = {
             {
                 action: "combat",
                 func: actionCombat
-            },
-            {
-                action: "buy",
-                func: actionBuy
             }
         ]
     },

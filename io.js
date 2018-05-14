@@ -31,7 +31,7 @@ module.exports = (io, gameManager) => {
                             if (full) {
                                 io.in(room).clients((error, clients) => {
                                     if (error) throw error;
-                                    gameManager.newGame(io, room, clients, require('./testGame/rules'));
+                                    gameManager.newGame(io, room, clients, require('./starRealms/rules'));
                                 });
 
                             }

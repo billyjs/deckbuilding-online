@@ -1,45 +1,42 @@
 module.exports =  class Card {
     constructor(player) {
         this.player = player;
-        // this.location = location;
         this.types = new Set(["card"]);
         this.name = "Base Card";
         this.value = 0;
-    }
-
-    getName() {
-        return this.name;
-    }
-
-    setLocation(location) {
-        this.location = location;
-    }
-
-    getLocation() {
-        return this.location;
+        this.cost = 0;
+        this.abilities = {};
     }
 
     availableAbilities() {
-        return [];
+        let abilities = [];
+        Object.keys(this.abilities).forEach((ability) => {
+            if (this.abilities[ability].available && !this.abilities[ability].used) {
+                abilities.push(ability);
+            }
+        });
+        console.log(abilities);
+        return abilities;
+    }
+    onActivate(gameState, ability) {
+        this.abilities[ability].func(gameState);
+        this.abilities[ability].used = true;
     }
 
     // abstract functions
     onPlay(gameState) {
-        throw new Error("Abstract function Card.onPlay used");
+        throw new Error("Abstract function Card.onPlay used: " + this.name);
     }
-    onOtherPlayed(other, gameState) {
-        throw new Error("Abstract function Card.onOtherPlay used");
-    }
-    onActivated(ability, gameState) {
+    onOtherPlay(other, gameState) {
         throw new Error("Abstract function Card.onOtherPlay used");
     }
     onPhaseStart(gameState, phase) {
         throw new Error("Abstract function Card.onPhaseStart used");
     }
-    onAcquired(gameState) {
-        throw new Error("Abstract function Card.onAcquired used");
+    onAcquire(gameState) {
+        throw new Error("Abstract function Card.onAcquire used");
     }
-    onDestroyed(gameState) {
-        throw new Error("Abstract function Card.onDestroyed used");
+    onDestroy(gameState) {
+        throw new Error("Abstract function Card.onDestroy used");
     }
 };

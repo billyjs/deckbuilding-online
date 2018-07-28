@@ -15,6 +15,19 @@ module.exports = class Game {
         this.gameState.loadRules();
         this.gameState.firstDraw();
         // this._running = true;
+    }
+
+    playerLoaded() {
+        this.socketIds.forEach((socketId) => {
+            if (this.io.sockets.connected[socketId].loaded === false) {
+                return false;
+            }
+        });
+
+        this.startGame();
+    }
+
+    startGame() {
         this.all().emit('log', 'Game Started');
         this.requestAction();
     }

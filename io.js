@@ -41,6 +41,15 @@ module.exports = (io, gameManager) => {
                 }
             });
         });
+        socket.on('loaded', () => {
+            if (socket.room) {
+                socket.loaded = true;
+                let game = gameManager.getGame(socket.room);
+                if (game) {
+                    game.playerLoaded();
+                }
+            }
+        });
         socket.on('responseAction', (action) => {
             if (socket.room) {
                 gameManager.getGame(socket.room).handleAction(action);

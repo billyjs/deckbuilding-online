@@ -19,7 +19,7 @@ module.exports = class GameState {
         this._choices = null;
 
         this.players = GameState.createPlayers(playerIds, rules.startingDeck);
-        this.shop = new Shop(rules._cards);
+        this.shop = new Shop(rules.cards);
         this.phase = rules.phases[0];
         this._running = true;
         this.winner = null;

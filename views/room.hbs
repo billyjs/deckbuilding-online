@@ -1,6 +1,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
 
-<div>
+<!-- Three.js test -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"></script>
+
+<script src="/javascripts/main.js"></script>
+
+<!-- -->
+
+<div style="height: 0px">
     <p id="players">Players: </p>
 </div>
 <hr>
@@ -58,8 +66,51 @@
         newLog(message);
     });
 
+    function test() {
+        displayDeck();
+    }
+
     socket.on('gameState', (gs) => {
         gameState.innerHTML = JSON.stringify(gs, null, 2);
+
+//        console.log(gs.players);
+
+        Object.keys(gs.players).forEach((key) => {
+            let self = key === socket.id;
+            let value = gs.players[key];
+            // update deck
+            displayDeck({ back: true, count: value.deck }, self);
+            //update discard
+            displayDiscard({ back: true, count: value.discard.length }, self);
+            // update hands
+            if (self) {
+                displayHand(value.hand.map((name) => {
+                    return { name: name };
+                }), self);
+            } else {
+                displayHand(Array(value.hand).fill({ back: true }));
+            }
+
+            // update inplay
+            displayInplay(value.inPlay.map((name) => {
+                return { name: name };
+            }), self);
+        });
+
+        // display trade deck
+        displayPile({
+                back: true,
+                count: gs.shop.rows.tradeRow.deck
+            }, 40, 0);
+        // display trade row
+        displayRow(gs.shop.rows.tradeRow.row.map((name) => {
+            return { name: name }
+        }), 0, 0);
+        // display explorer deck
+        displayPile({
+                name: gs.shop.piles.explorers.cardName,
+                count: gs.shop.piles.explorers.amount
+            }, -40, 0);
     });
 
     socket.on('requestAction', (actions) => {

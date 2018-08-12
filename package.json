@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "echo no tests yet"
+    "test": "mocha"
   },
   "dependencies": {
     "body-parser": "~1.18.2",
@@ -16,5 +16,8 @@
     "serve-favicon": "~2.4.5",
     "socket.io": "^2.1.0",
     "stylus": "0.54.5"
+  },
+  "devDependencies": {
+    "mocha": "^5.2.0"
   }
 }

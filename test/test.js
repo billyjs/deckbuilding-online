@@ -14,9 +14,10 @@ describe("Player", function() {
     });
 
     describe("#updateCounter()", function() {
-        it("should have a counter \"test\" with the value of 4, (1 + 3)", function() {
-            player.updateCounter("test", 3);
-            assert.equal(player.counters.test, 4);
+        it("should have a counter \"test\" with the value of 3", function() {
+            player.counters.test2 = 0;
+            player.updateCounter("test2", 3);
+            assert.equal(player.counters.test2, 3);
         });
     });
 });

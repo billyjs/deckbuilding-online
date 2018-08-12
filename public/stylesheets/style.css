@@ -1,7 +1,55 @@
 body {
   margin: 0px;
+  overflow: hidden;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-image: url("../images/00-star-space-mini3.jpg");
+  background-repeat: repeat;
 }
 a {
   color: #00b7ff;
+}
+.debug {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  color: #fff;
+}
+#labels {
+  display: fixed;
+  color: #fff;
+  font-size: 3vh;
+  user-select: none;
+  text-align: center;
+  text-shadow: 0.2vh 0.2vh #000;
+}
+#labels p {
+  margin: 2vh 0;
+}
+#labels .large {
+  margin: 5vh 0;
+  font-size: 5vh;
+}
+#decision {
+  display: none;
+  padding: 2vw;
+  position: fixed;
+  color: #fff;
+  font-size: 3vh;
+  user-select: none;
+  text-shadow: 0.2vh 0.2vh #000;
+  background-color: #8a2be2;
+  width: 40vw;
+  left: 28vw;
+}
+#decision a {
+  display: block;
+  margin-bottom: 1vh;
+  cursor: pointer;
+}
+#decision a:hover {
+  background-color: #00b7ff;
+  color: #fff;
+}
+#decision p {
+  margin-top: 0;
 }

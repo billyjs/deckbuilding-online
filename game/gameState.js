@@ -64,10 +64,16 @@ module.exports = class GameState {
         }
     }
 
-    addDecision(playerId, choices, callback) {
+    addDecision(playerId, description, choices, callback) {
         this.decision = true;
         this.deciding = playerId;
-        this._decisionCallback = callback;
+        this.description = description;
+        this._decisionCallback = (choice) => {
+            this.decision = false;
+            if (choice) {
+                callback(choice);
+            }
+        };
         this._choices = choices;
     }
 
@@ -81,6 +87,7 @@ module.exports = class GameState {
                 this.getPlaying().setCounter("trade", 0);
                 this.getPlaying().setCounter("combat", 0);
                 this.getPlaying().setCounter("blobs", 0);
+                this.getPlaying().setCounter("buyTopDeck", 0);
                 break;
             default:
                 break;
@@ -161,7 +168,7 @@ module.exports = class GameState {
     }
 
     makeActions() {
-        let actions = [{ action: "end" }];
+        let actions = [{ action: "end", type: "player", target: "deck" }];
         this._makes[this.phase].forEach((make) => {
             actions.push(...make(this));
         });
@@ -188,7 +195,7 @@ module.exports = class GameState {
     firstDraw() {
         this._playerIds.forEach((playerId, index) => {
             this.players[playerId].draw(this._rules.drawAmount(this.turn, index));
-        })
+        });
         this.turn = 1;
     }
 
@@ -212,6 +219,7 @@ module.exports = class GameState {
             playing: this.playing,
             decision: this.decision,
             deciding: this.deciding,
+            description: this.description,
             turn: this.turn,
             shop: this.shop.getState(),
             players: this.getPlayerStates(playerId)

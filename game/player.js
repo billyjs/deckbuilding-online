@@ -42,11 +42,11 @@ module.exports = class Player {
 
     play(gameState, index) {
         let card = this.hand[index];
-        card.onPlay(gameState);
         this.inPlay.forEach((inPlay) => {
             inPlay.onOtherPlay(gameState, card);
         });
         this.inPlay.push(...this.hand.splice(index, 1));
+        card.onPlay(gameState);
     }
 
     destroy(gameState, index) {
@@ -78,6 +78,14 @@ module.exports = class Player {
 
     fromHand(index) {
         return this.hand.splice(index, 1)[0];
+    }
+
+    from(target, index) {
+        if (this[target]) {
+            return this[target].splice(index, 1)[0];
+        } else {
+            return null;
+        }
     }
 
     toDiscard(card) {

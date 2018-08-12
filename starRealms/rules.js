@@ -4,9 +4,15 @@ function createStartingDeck() {
     let deck = [];
     for (let i = 0; i < 8; i++) {
         deck.push(new cards.Scout());
+        // deck.push(new cards.BlobCarrier());
+        // deck.push(new cards.RecyclingStation());
     }
     for (let i = 0; i < 2; i++) {
         deck.push(new cards.Viper());
+        // deck.push(new cards.BattlePod());
+        // deck.push(new cards.BlobDestroyer());
+        // deck.push(new cards.BlobCarrier());
+        // deck.push(new cards.BlobWorld());
     }
     return deck;
 }
@@ -22,6 +28,13 @@ function createTradeDeck() {
         deck.push("ImperialFighter");
         deck.push("ImperialFrigate");
         deck.push("SurveyShip");
+
+        deck.push("FederationShuttle");
+        deck.push("Cutter");
+
+        deck.push("TradeBot");
+        deck.push("MissileBot");
+        deck.push("SupplyBot");
     }
     // doubles
     for (let i = 0; i < 2; i++) {
@@ -32,6 +45,14 @@ function createTradeDeck() {
         deck.push("Corvette");
         deck.push("SpaceStation");
         deck.push("RecyclingStation");
+
+        deck.push("EmbassyYacht");
+        deck.push("Freighter");
+        deck.push("TradingPost");
+        deck.push("BarterWorld");
+
+        deck.push("PatrolMech");
+        deck.push("BattleStation");
     }
     // singles
     deck.push("BattleBlob");
@@ -45,14 +66,36 @@ function createTradeDeck() {
     deck.push("WarWorld");
     deck.push("RoyalRedoubt");
     deck.push("FleetHQ");
+
+    deck.push("TradeEscort");
+    deck.push("Flagship");
+    deck.push("CommandShip");
+    deck.push("DefenseCenter");
+    deck.push("PortOfCall");
+    deck.push("CentralOffice");
+
+    deck.push("StealthNeedle");
+    deck.push("BattleMech");
+    deck.push("MissileMech");
+    deck.push("MechWorld");
+    deck.push("Junkyard");
+    deck.push("MachineBase");
+    deck.push("BrainWorld");
     return deck;
 }
+
+// function createTradeDeck() {
+//     //test function TODO: remove this
+//     return Array(20).fill("Battlecruiser");
+// }
 
 function makePlayingActions(gameState) {
     let actions = [];
     gameState.getPlaying().hand.forEach((card, index) => {
         actions.push({
             action: 'play',
+            target: "hand",
+            type: "player",
             card: card.name,
             index: index
         })
@@ -67,6 +110,8 @@ function makeAbilityActions(gameState) {
             actions.push({
                 action: "ability",
                 ability: ability,
+                type: "player",
+                target: "inplay",
                 card: card.name,
                 index: index
             });
@@ -98,7 +143,8 @@ function makeCombatActions(gameState) {
         outposts.forEach((outpost) => {
             actions.push({
                 action: "combat",
-                target: "card",
+                type: "opponent",
+                target: "inplay",
                 player: playerId,
                 damage: outpost.card.defense,
                 card: outpost.card.name,
@@ -109,7 +155,8 @@ function makeCombatActions(gameState) {
             bases.forEach((base) => {
                 actions.push({
                     action: "combat",
-                    target: "card",
+                    type: "opponent",
+                    target: "inplay",
                     player: playerId,
                     damage: base.card.defense,
                     card: base.card.name,
@@ -119,7 +166,8 @@ function makeCombatActions(gameState) {
             if (combat > 0) {
                 actions.push({
                     action: "combat",
-                    target: "player",
+                    type: "opponent",
+                    target: "deck",
                     player: playerId,
                     damage: combat
                 });
@@ -132,15 +180,19 @@ function makeCombatActions(gameState) {
 function makeBuyActions(gameState) {
     let actions = [];
     let trade = gameState.getPlaying().get("trade");
+    let topDeck = gameState.getPlaying().get("buyTopDeck");
     // piles
     Object.keys(gameState.shop.piles).forEach((key) => {
         let pile = gameState.shop.piles[key];
         if (pile.amount > 0 && cards._costEnum[pile.cardName] <= trade) {
-            actions.push({
-                action: "buy",
-                target: "pile",
-                pile: key
-            })
+            if (cards[pile.cardName].getType() !== "ship" || topDeck === 0) {
+                actions.push({ action: "buy", type: "piles", target: key });
+            } else if (topDeck === 1) {
+                actions.push({ action: "buy", type: "piles", target: key });
+                actions.push({ action: "buyTopDeck", type: "piles", target: key });
+            } else if (topDeck === 2) {
+                actions.push({ action: "buyTopDeck", type: "piles", target: key });
+            }
         }
     });
     //rows
@@ -148,12 +200,14 @@ function makeBuyActions(gameState) {
         let row = gameState.shop.rows[key];
         row.row.forEach((card, index) => {
             if (card && cards._costEnum[row.row[index]] <= trade) {
-                actions.push({
-                    action: "buy",
-                    target: "row",
-                    row: key,
-                    index: index
-                })
+                if (cards[card].getType() !== "ship" || topDeck === 0) {
+                    actions.push({ action: "buy", type: "rows", target: key, index: index });
+                } else if (topDeck === 1) {
+                    actions.push({ action: "buy", type: "rows", target: key, index: index });
+                    actions.push({ action: "buyTopDeck", type: "rows", target: key, index: index });
+                } else if (topDeck === 2) {
+                    actions.push({ action: "buyTopDeck", type: "rows", target: key, index: index });
+                }
             }
         })
     });
@@ -174,16 +228,16 @@ function actionPlay(gameState, action) {
 }
 
 function actionAbility(gameState, action) {
-    gameState.getPlaying().inPlay[action.index].onActivate(gameState, action.ability);
+    gameState.getPlaying().inPlay[action.index].onActivate(gameState, action);
 }
 
 function actionCombat(gameState, action) {
     switch(action.target) {
-        case "player":
+        case "deck":
             gameState.players[action.player].updateCounter("authority", -action.damage);
             gameState.getPlaying().updateCounter("combat", -action.damage);
             break;
-        case "card":
+        case "inplay":
             gameState.players[action.player].destroy(gameState, action.index);
             gameState.getPlaying().updateCounter("combat", -action.damage);
             break;
@@ -193,14 +247,34 @@ function actionCombat(gameState, action) {
 }
 
 function actionBuy(gameState, action) {
-    if (action.target === "pile") {
-        let card = gameState.shop.fromPile(action.pile);
+    let card = null;
+    if (action.type === "piles") {
+        card = gameState.shop.fromPile(action.target);
         gameState.getPlaying().toDiscard(card);
         gameState.getPlaying().updateCounter("trade", -card.cost);
-    } else if (action.target === "row") {
-        let card = gameState.shop.fromRow(action.row, action.index);
+    } else if (action.type === "rows") {
+        card = gameState.shop.fromRow(action.target, action.index);
         gameState.getPlaying().toDiscard(card);
         gameState.getPlaying().updateCounter("trade", -card.cost);
+    }
+    if (card && card.types.has("ship")) {
+        gameState.getPlaying().setCounter("buyTopDeck", 0);
+    }
+}
+
+function actionBuyTopDeck(gameState, action) {
+    let card = null;
+    if (action.type === "piles") {
+        card = gameState.shop.fromPile(action.target);
+        gameState.getPlaying().toDeck(card);
+        gameState.getPlaying().updateCounter("trade", -card.cost);
+    } else if (action.type === "rows") {
+        card = gameState.shop.fromRow(action.target, action.index);
+        gameState.getPlaying().toDeck(card);
+        gameState.getPlaying().updateCounter("trade", -card.cost);
+    }
+    if (card && card.types.has("ship")) {
+        gameState.getPlaying().setCounter("buyTopDeck", 0);
     }
 }
 
@@ -236,6 +310,10 @@ module.exports = {
             },
             {
                 name: "blobs",
+                value: 0
+            },
+            {
+                name: "buyTopDeck",
                 value: 0
             }
         ]
@@ -275,6 +353,10 @@ module.exports = {
             {
                 action: "buy",
                 func: actionBuy
+            },
+            {
+                action: "buyTopDeck",
+                func: actionBuyTopDeck
             }
         ]
     },

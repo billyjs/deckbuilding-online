@@ -67,7 +67,7 @@ module.exports = class Game {
         let choices = this.gameState._choices;
         switch(choices.length) {
             case 0:
-                break;
+                this.handleDecision(null);
             case 1:
                 this.handleDecision(choices[0]);
                 break;
@@ -80,8 +80,11 @@ module.exports = class Game {
     handleDecision(choice) {
         // TODO: validate decision
 
-        this.gameState._decisionCallback(choice.value);
-        this.all().emit('log', 'Decision: ' + choice.name);
+        this.gameState._decisionCallback(choice);
+
+        if (choice) {
+            this.all().emit('log', 'Decision: ' + choice.name);
+        }
 
         this.next();
 

@@ -15,12 +15,11 @@ module.exports =  class Card {
                 abilities.push(ability);
             }
         });
-        console.log(abilities);
         return abilities;
     }
-    onActivate(gameState, ability) {
-        this.abilities[ability].func(gameState);
-        this.abilities[ability].used = true;
+    onActivate(gameState, action) {
+        this.abilities[action.ability].func(gameState, action);
+        this.abilities[action.ability].used = true;
     }
 
     // abstract functions
@@ -30,7 +29,7 @@ module.exports =  class Card {
     onOtherPlay(other, gameState) {
         throw new Error("Abstract function Card.onOtherPlay used");
     }
-    onPhaseStart(gameState, phase) {
+    onPhaseStart(gameState, location, index) {
         throw new Error("Abstract function Card.onPhaseStart used");
     }
     onAcquire(gameState) {

@@ -1,185 +1,179 @@
+<!-- load socket.io -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
 
-<!-- Three.js test -->
-
+<!-- load three.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"></script>
 
+<!-- load game specific layout settings TODO: make modular for other games -->
+<script src="/starRealms/layout.js"></script>
+
+<!-- load main script -->
 <script src="/javascripts/main.js"></script>
 
-<!-- -->
-
-<div style="height: 0px">
-    <p id="players">Players: </p>
-</div>
-<hr>
-<div>
-    <input id="nickname-box" autocomplete="off" />
-    <button id="nickname-btn">Set Nickname</button>
-</div>
-<hr>
-<div class="messages">
-    <ul id="messages"></ul>
-    <input id="message-box" autocomplete="off" />
-    <button id="message-btn">Send</button>
-</div>
-<hr>
-<div class="log" style="overflow:scroll; height:100px;">
-    <ul id="log"></ul>
-</div>
-<hr>
-<pre id="gameState" style="overflow:scroll; height:400px;">
-</pre>
-<hr>
-<div>
-    <ul id="actions"></ul>
-</div>
+<div id="labels"></div>
+<div id="decision"></div>
 
 <script>
     const socket = io();
 
-    const messages = document.getElementById("messages");
-    const messageBox = document.getElementById("message-box");
-    const messageBtn = document.getElementById("message-btn");
+    const labels = document.getElementById("labels");
+    const decision = document.getElementById("decision");
 
-    const log = document.getElementById("log");
-
-    const actions = document.getElementById("actions");
-
-    const gameState = document.getElementById("gameState");
-
-    const nicknameBox = document.getElementById("nickname-box");
-    const nicknameBtn = document.getElementById("nickname-btn");
-
-    const players = document.getElementById("players");
-
-    socket.on('players', (p) => {
-        players.innerHTML = "Players: " + p;
-    });
-
+    // when joining the room send the message join back to the server
     socket.emit('join', "{{room}}");
 
-    socket.on('message', (message) => {
-        newMessage(message);
-    });
+    let gameState = null;
+    let decidingMesh = null;
 
-    socket.on('log', (message) => {
-        newLog(message);
-    });
-
-    function test() {
-        displayDeck();
-    }
-
+    // when a gameState message is received from the server
     socket.on('gameState', (gs) => {
-        gameState.innerHTML = JSON.stringify(gs, null, 2);
 
-//        console.log(gs.players);
 
+        // if the player playing in the previous gameState and the new gameState
+        // are different show a message that someone new is playing
+        if (gameState && gs.playing !== gameState.playing) {
+            let texture = gs.playing === socket.id ? textures.displays.yourturn : textures.displays.oppturn;
+            let popup = createPlane(0, 0, 2, 70, 22, null, texture);
+
+            // remove the message after 2 seconds
+            setTimeout(() => {
+                removeMesh(popup);
+            }, 2000);
+        }
+
+        // update the gameState to the new gameState
+        gameState = gs;
+
+        // if the game is over and there is a winner show a message that you won or lost the game
+        if (gs.winner === socket.id) {
+            createPlane(0, 0, 2, 70, 22, null, textures.displays.youwon);
+        } else if (gs.winner !== null) {
+            createPlane(0, 0, 2, 70, 22, null, textures.displays.youlost);
+        }
+
+        // if another player is deciding something on your turn show a message that you are waiting
+        if (gs.decision && gs.playing === socket.id && gs.deciding !== socket.id) {
+            decidingMesh = createPlane(0, 0, 2, 70, 22, null, textures.displays.wait);
+        } else if (decidingMesh) {
+            removeMesh(decidingMesh);
+        }
+
+        // remove all labels before adding the new labels
+        labels.innerHTML = "";
+
+        // for each player display their deck, discard, hand, inplay, and counters
         Object.keys(gs.players).forEach((key) => {
             let self = key === socket.id;
-            let value = gs.players[key];
+            let player = gs.players[key];
+
+            // update counters
+            let offset = self ? -1 : 1;
+            displayLabel(
+                    layout.counters.x * offset,
+                    layout.counters.y * offset,
+                    layout.counters.z || 0,
+                    layout.counters.width,
+                    layout.counters.height,
+                    layout.counters.createText(player.counters)
+            );
+
             // update deck
-            displayDeck({ back: true, count: value.deck }, self);
+            displayDeck({ back: true, count: player.deck }, self);
+
             //update discard
-            displayDiscard({ back: true, count: value.discard.length }, self);
+            displayDiscard({ back: true, count: player.discard.length }, self);
+
             // update hands
             if (self) {
-                displayHand(value.hand.map((name) => {
+                displayHand(player.hand.map((name) => {
                     return { name: name };
                 }), self);
             } else {
-                displayHand(Array(value.hand).fill({ back: true }));
+                displayHand(Array(player.hand).fill({ back: true }));
             }
 
             // update inplay
-            displayInplay(value.inPlay.map((name) => {
+            displayInplay(player.inPlay.map((name) => {
                 return { name: name };
             }), self);
         });
 
-        // display trade deck
-        displayPile({
-                back: true,
-                count: gs.shop.rows.tradeRow.deck
-            }, 40, 0);
-        // display trade row
-        displayRow(gs.shop.rows.tradeRow.row.map((name) => {
-            return { name: name }
-        }), 0, 0);
-        // display explorer deck
-        displayPile({
-                name: gs.shop.piles.explorers.cardName,
-                count: gs.shop.piles.explorers.amount
-            }, -40, 0);
+        // display piles with their set x y positions
+        Object.keys(gs.shop.piles).forEach(pile => {
+            displayPile({
+                name: gs.shop.piles[pile].cardName,
+                count: gs.shop.piles[pile].amount,
+            }, layout.piles[pile].x, layout.piles[pile].y, layout.piles[pile].target || pile);
+        });
+
+        // display rows with their set x y positions
+        Object.keys(gs.shop.rows).forEach(row => {
+            displayRow(gs.shop.rows[row].row.map(name => {
+                return { name: name };
+            }), layout.rows[row].row.x, layout.rows[row].row.y, layout.rows[row].row.target || row);
+            if (layout.rows[row].deck) {
+                displayPile({
+                    back: true,
+                    count: gs.shop.rows[row].deck
+                }, layout.rows[row].deck.x, layout.rows[row].deck.y, layout.rows[row].deck.target || row);
+            }
+        });
     });
 
+    // when a requestAction message is received from the server
     socket.on('requestAction', (actions) => {
-        actions = JSON.parse(actions);
-        console.log(actions);
-        actions.forEach((action) => {
-            newAction(action);
+        resetClickableMeshes();
+        JSON.parse(actions).forEach((action) => {
+
+            if (!action.type || !action.target) {
+                console.log("Unable to link action!");
+                console.log(action);
+                return;
+            }
+
+            let mesh = meshes[action.type][action.target];
+            if (action.index !== undefined) {
+                mesh = mesh[action.index];
+            }
+            mesh.actions.push({
+                ...action,
+                callback: () => {
+                    socket.emit("responseAction", action);
+                }
+            });
         });
     });
 
+    // when a requestDecision message is received from the server
     socket.on('requestDecision', (choices) => {
-        choices = JSON.parse(choices);
-        choices.forEach((choice) => {
-            newChoice(choice);
+
+        // setup the decision element for displaying
+        decision.style.display = "block";
+        decision.innerHTML = "";
+
+        // create a p element with the decision description
+        let elem = document.createElement("p");
+        elem.innerHTML = gameState.description;
+        decision.appendChild(elem);
+
+        // create an a element for each choice available
+        JSON.parse(choices).forEach(choice => {
+            let elem = document.createElement("a");
+            elem.innerHTML = choice.name;
+            elem.onclick = () => {
+                decision.style.display = "none";
+                socket.emit("responseDecision", choice);
+            };
+            decision.appendChild(elem);
         });
+
+        // set the position of the decision element relative to how many choices there are
+        decision.style.bottom = ((100 - (decision.childElementCount * 5)) / 2) + "vh";
     });
 
+    // if the room is full kick the player back to the room selection page
     socket.on('full', () => {
         window.location = "/rooms";
     });
 
-    messageBtn.onclick = function() {
-        let message = messageBox.value;
-        messageBox.value = '';
-        socket.emit("message", message, "{{room}}");
-        newMessage("YOU: " + message);
-    };
-
-    nicknameBtn.onclick = function() {
-        let nickname = nicknameBox.value;
-        nicknameBox.value = '';
-        socket.emit("nickname", nickname);
-    };
-
-    function newMessage(message) {
-        let item = document.createElement('li');
-        item.innerHTML = message;
-        messages.appendChild(item);
-    }
-
-    function newLog(message) {
-        let item = document.createElement('li');
-        item.innerHTML = message;
-        log.appendChild(item);
-    }
-
-    function newAction(action) {
-        let item = document.createElement('li');
-        let button = document.createElement('button');
-        item.innerHTML = JSON.stringify(action, null, 2);
-        button.innerHTML = "Do";
-        item.appendChild(button);
-        actions.appendChild(item);
-        button.onclick = function() {
-            actions.innerHTML = "";
-            socket.emit("responseAction", action);
-        }
-    }
-
-    function newChoice(choice) {
-        let item = document.createElement('li');
-        let button = document.createElement('button');
-        item.innerHTML = JSON.stringify(choice, null, 2);
-        button.innerHTML = "Do";
-        item.appendChild(button);
-        actions.appendChild(item);
-        button.onclick = function() {
-            actions.innerHTML = "";
-            socket.emit("responseDecision", choice);
-        }
-    }
 </script>

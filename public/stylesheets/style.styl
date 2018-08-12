@@ -1,6 +1,53 @@
 body
   margin 0px
-  //overflow hidden
+  overflow hidden
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif
+  background-image url("../images/00-star-space-mini3.jpg")
+  background-repeat repeat
 a
   color: #00B7FF
+
+.debug
+  position fixed
+  top 20px
+  right 20px
+  color white
+
+#labels
+  display fixed
+  color white
+  font-size 3vh
+  user-select none
+  text-align center
+  text-shadow: 0.2vh 0.2vh #000
+
+  p
+    margin 2vh 0
+
+  .large
+    margin 5vh 0
+    font-size 5vh
+
+#decision
+  display none
+  padding 2vw
+  position fixed
+  color white
+  font-size 3vh
+  user-select none
+  text-shadow: 0.2vh 0.2vh #000
+  background-color blueviolet
+  width 40vw
+  left 28vw
+
+  a
+    display block
+    margin-bottom 1vh
+    cursor pointer
+
+  a:hover
+    background-color #00b7ff
+    color white
+
+  p
+    margin-top 0

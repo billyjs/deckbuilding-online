@@ -3,61 +3,75 @@ const types = require("./types");
 // functions for common abilities
 
 function scrapTradeRow(gameState, optional, callback) {
-	let choices = optional ? [{name: "None", value: -1}] : [];
+	let choices = optional ? [{ name: "None", value: -1 }] : [];
 	gameState.shop.rows.tradeRow.row.forEach((card, index) => {
 		choices.push({
 			name: card.replace(/([a-z](?=[A-Z]))/g, "$1 "),
 			value: index
 		});
 	});
-	gameState.addDecision(gameState.playing, "Choose a card in the trade row to scrap.", choices, choice => {
-		if (choice.value !== -1) {
-			gameState.shop.fromRow("tradeRow", choice.value);
+	gameState.addDecision(
+		gameState.playing,
+		"Choose a card in the trade row to scrap.",
+		choices,
+		choice => {
+			if (choice.value !== -1) {
+				gameState.shop.fromRow("tradeRow", choice.value);
+			}
+			if (typeof callback === "function") {
+				callback();
+			}
 		}
-		if (typeof callback === "function") {
-			callback();
-		}
-	});
+	);
 }
 
 function destroyBase(gameState, optional, callback) {
-	let choices = optional ? [{name: "None", value: false}] : [];
-	gameState._playerIds.filter((playerId) => { return playerId !== gameState.playing; }).forEach((playerId) => {
-		let bases = [];
-		let outposts = [];
-		gameState.players[playerId].inPlay.forEach((card, index) => {
-			if (card.types.has("outpost")) {
-				outposts.push({
-					name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
-					value: {
-						target: playerId,
-						index: index
-					}
-				});
-			} else if (outposts.length === 0 && card.types.has("base")) {
-				bases.push({
-					name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
-					value: {
-						target: playerId,
-						index: index
-					}
-				});
+	let choices = optional ? [{ name: "None", value: false }] : [];
+	gameState._playerIds
+		.filter(playerId => {
+			return playerId !== gameState.playing;
+		})
+		.forEach(playerId => {
+			let bases = [];
+			let outposts = [];
+			gameState.players[playerId].inPlay.forEach((card, index) => {
+				if (card.types.has("outpost")) {
+					outposts.push({
+						name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
+						value: {
+							target: playerId,
+							index: index
+						}
+					});
+				} else if (outposts.length === 0 && card.types.has("base")) {
+					bases.push({
+						name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
+						value: {
+							target: playerId,
+							index: index
+						}
+					});
+				}
+			});
+			if (outposts.length !== 0) {
+				choices.push(...outposts);
+			} else {
+				choices.push(...bases);
 			}
 		});
-		if (outposts.length !== 0) {
-			choices.push(...outposts);
-		} else {
-			choices.push(...bases);
+	gameState.addDecision(
+		gameState.playing,
+		"Choose an opponents base to destroy.",
+		choices,
+		choice => {
+			if (choice.value) {
+				gameState.players[choice.value.target].destroy(gameState, choice.value.index);
+			}
+			if (typeof callback === "function") {
+				callback();
+			}
 		}
-	});
-	gameState.addDecision(gameState.playing, "Choose an opponents base to destroy.", choices, choice => {
-		if (choice.value) {
-			gameState.players[choice.value.target].destroy(gameState, choice.value.index);
-		}
-		if (typeof callback === "function") {
-			callback();
-		}
-	});
+	);
 }
 
 function acquireBlobCarrier(gameState) {
@@ -78,105 +92,139 @@ function acquireBlobCarrier(gameState) {
 }
 
 function opponentDiscard(gameState) {
-	let choices = gameState._playerIds.filter((player) => {
-		return player !== gameState.playing;
-	}).map((player) => {
-		return {
-			name: player,
-			value: player
-		};
-	});
-	gameState.addDecision(gameState.playing, "Choose a player to discard a card from their hand.", choices, (choice) => {
-		let playerId = choice.value;
-		let choices = gameState.players[playerId].hand.map((card, index) => {
+	let choices = gameState._playerIds
+		.filter(player => {
+			return player !== gameState.playing;
+		})
+		.map(player => {
 			return {
-				name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
-				value: index
+				name: player,
+				value: player
 			};
 		});
-		gameState.addDecision(playerId, "Choose a card from your hand to discard.", choices, (choice) => {
-			let index = choice.value;
-			let card = gameState.players[playerId].fromHand(index);
-			gameState.players[playerId].toDiscard(card);
-		});
-	});
+	gameState.addDecision(
+		gameState.playing,
+		"Choose a player to discard a card from their hand.",
+		choices,
+		choice => {
+			let playerId = choice.value;
+			let choices = gameState.players[playerId].hand.map((card, index) => {
+				return {
+					name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
+					value: index
+				};
+			});
+			gameState.addDecision(
+				playerId,
+				"Choose a card from your hand to discard.",
+				choices,
+				choice => {
+					let index = choice.value;
+					let card = gameState.players[playerId].fromHand(index);
+					gameState.players[playerId].toDiscard(card);
+				}
+			);
+		}
+	);
 }
 
 function discardHand(gameState, optional, callback) {
 	let choices = optional ? [{ name: "None", value: -1 }] : [];
-	choices.push(...gameState.getPlaying().hand.map((card, index) => {
-		return {
-			name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
-			value: index
-		};
-	}));
-	gameState.addDecision(gameState.playing, "Choose a card from your hand to discard.", choices, (choice) => {
-		if (choice.value !== -1) {
-			let card = gameState.getPlaying().fromHand(choice.value);
-			gameState.getPlaying().toDiscard(card);
+	choices.push(
+		...gameState.getPlaying().hand.map((card, index) => {
+			return {
+				name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
+				value: index
+			};
+		})
+	);
+	gameState.addDecision(
+		gameState.playing,
+		"Choose a card from your hand to discard.",
+		choices,
+		choice => {
+			if (choice.value !== -1) {
+				let card = gameState.getPlaying().fromHand(choice.value);
+				gameState.getPlaying().toDiscard(card);
+			}
+			if (typeof callback === "function") {
+				callback(choice);
+			}
 		}
-		if (typeof callback === "function") {
-			callback(choice);
-		}
-	});
+	);
 }
 
 function scrapHandDiscard(gameState, optional, callback) {
 	let choices = optional ? [{ name: "None", value: false }] : [];
-	choices.push(...gameState.getPlaying().hand.map((card, index) => {
-		return {
-			name: "Hand: " + card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
-			value: {
-				target: "hand",
-				index: index
+	choices.push(
+		...gameState.getPlaying().hand.map((card, index) => {
+			return {
+				name: "Hand: " + card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
+				value: {
+					target: "hand",
+					index: index
+				}
+			};
+		})
+	);
+	choices.push(
+		...gameState.getPlaying().discard.map((card, index) => {
+			return {
+				name: "Discard: " + card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
+				value: {
+					target: "discard",
+					index: index
+				}
+			};
+		})
+	);
+	gameState.addDecision(
+		gameState.playing,
+		"Choose a card from you hand or discard to scrap.",
+		choices,
+		choice => {
+			if (choice.value !== false) {
+				let card = gameState.getPlaying().from(choice.value.target, choice.value.index);
+				if (card.name === "Explorer") {
+					gameState.shop.piles.explorers.amount += 1;
+				}
 			}
-		};
-	}));
-	choices.push(...gameState.getPlaying().discard.map((card, index) => {
-		return {
-			name: "Discard: " + card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
-			value: {
-				target: "discard",
-				index: index
-			}
-		};
-	}));
-	gameState.addDecision(gameState.playing, "Choose a card from you hand or discard to scrap.", choices, choice => {
-		if (choice.value !== false) {
-			let card = gameState.getPlaying().from(choice.value.target, choice.value.index);
-			if (card.name === "Explorer") {
-				gameState.shop.piles.explorers.amount += 1;
+			if (typeof callback === "function") {
+				callback(choice);
 			}
 		}
-		if (typeof callback === "function") {
-			callback(choice);
-		}
-	});
+	);
 }
 
 function scrapHand(gameState, optional, callback) {
 	let choices = optional ? [{ name: "None", value: -1 }] : [];
-	choices.push(...gameState.getPlaying().hand.map((card, index) => {
-		return {
-			name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
-			value: index
-		};
-	}));
-	gameState.addDecision(gameState.playing, "Choose a card from you hand to scrap.", choices, choice => {
-		if (choice.value !== -1) {
-			let card = gameState.getPlaying().fromHand(choice.value);
-			if (card && card.name === "Explorer") {
-				gameState.shop.piles.explorers.amount += 1;
+	choices.push(
+		...gameState.getPlaying().hand.map((card, index) => {
+			return {
+				name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
+				value: index
+			};
+		})
+	);
+	gameState.addDecision(
+		gameState.playing,
+		"Choose a card from you hand to scrap.",
+		choices,
+		choice => {
+			if (choice.value !== -1) {
+				let card = gameState.getPlaying().fromHand(choice.value);
+				if (card && card.name === "Explorer") {
+					gameState.shop.piles.explorers.amount += 1;
+				}
+			}
+			if (typeof callback === "function") {
+				callback(choice);
 			}
 		}
-		if (typeof callback === "function") {
-			callback(choice);
-		}
-	});
+	);
 }
 
 const cards = {
-
 	// unaligned cards
 
 	Scout: class Scout extends types.Ship {
@@ -238,8 +286,8 @@ const cards = {
 			this.faction = "blob";
 			this.cost = 1;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -260,18 +308,16 @@ const cards = {
 			this.faction = "blob";
 			this.cost = 2;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
-		primaryAbility(gameState)
-		{
+		primaryAbility(gameState) {
 			gameState.getPlaying().updateCounter("combat", 4);
 			scrapTradeRow(gameState, true);
 		}
-		allyAbility(gameState)
-		{
+		allyAbility(gameState) {
 			gameState.getPlaying().updateCounter("combat", 2);
 		}
 	},
@@ -283,8 +329,8 @@ const cards = {
 			this.faction = "blob";
 			this.cost = 2;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -306,8 +352,8 @@ const cards = {
 			this.cost = 3;
 			this.defense = 5;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
@@ -329,9 +375,9 @@ const cards = {
 			this.faction = "blob";
 			this.cost = 3;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
@@ -357,8 +403,8 @@ const cards = {
 			this.faction = "blob";
 			this.cost = 4;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -382,8 +428,8 @@ const cards = {
 			this.cost = 5;
 			this.defense = 5;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -404,9 +450,9 @@ const cards = {
 			this.faction = "blob";
 			this.cost = 6;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
@@ -432,8 +478,8 @@ const cards = {
 			this.faction = "blob";
 			this.cost = 6;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -454,8 +500,8 @@ const cards = {
 			this.faction = "blob";
 			this.cost = 7;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -478,7 +524,7 @@ const cards = {
 			this.cost = 8;
 			this.defense = 7;
 			this.abilities = {
-				primary: {func: this.primaryAbility}
+				primary: { func: this.primaryAbility }
 			};
 			this.resetCounters();
 		}
@@ -486,18 +532,20 @@ const cards = {
 		primaryAbility(gameState) {
 			// 5 combat or draw a card for each blob card that you've played this turn
 			let blobs = gameState.getPlaying().get("blobs");
-			gameState.addDecision(gameState.playing, "Choose an action.", [
-				{ name: "5 Combat", value: 0},
-				{ name: "Draw " + blobs, value: 1}
-			], choice => {
-				if (choice.value === 0) {
-					// 5 combat
-					gameState.getPlaying().updateCounter("combat", 5);
-				} else if (choice.value === 1) {
-					// draw a card for each blob card that you've played this turn
-					gameState.getPlaying().draw(blobs);
+			gameState.addDecision(
+				gameState.playing,
+				"Choose an action.",
+				[{ name: "5 Combat", value: 0 }, { name: "Draw " + blobs, value: 1 }],
+				choice => {
+					if (choice.value === 0) {
+						// 5 combat
+						gameState.getPlaying().updateCounter("combat", 5);
+					} else if (choice.value === 1) {
+						// draw a card for each blob card that you've played this turn
+						gameState.getPlaying().draw(blobs);
+					}
 				}
-			});
+			);
 		}
 	},
 
@@ -511,23 +559,25 @@ const cards = {
 			this.cost = 4;
 			this.defense = 4;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
 
 		primaryAbility(gameState) {
-			gameState.addDecision(gameState.playing, "Choose an action.", [
-				{ name: "2 Authority", value: 0 },
-				{ name: "2 Trade", value: 1 }
-			], choice => {
-				if (choice.value === 0) {
-					gameState.getPlaying().updateCounter("authority", 2);
-				} else if (choice.value === 1) {
-					gameState.getPlaying().updateCounter("trade", 2);
+			gameState.addDecision(
+				gameState.playing,
+				"Choose an action.",
+				[{ name: "2 Authority", value: 0 }, { name: "2 Trade", value: 1 }],
+				choice => {
+					if (choice.value === 0) {
+						gameState.getPlaying().updateCounter("authority", 2);
+					} else if (choice.value === 1) {
+						gameState.getPlaying().updateCounter("trade", 2);
+					}
 				}
-			});
+			);
 		}
 
 		scrapAbility(gameState, action) {
@@ -544,8 +594,8 @@ const cards = {
 			this.cost = 7;
 			this.defense = 6;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -568,8 +618,8 @@ const cards = {
 			this.faction = "tradeFederation";
 			this.cost = 8;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -592,8 +642,8 @@ const cards = {
 			this.faction = "tradeFederation";
 			this.cost = 2;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -616,23 +666,25 @@ const cards = {
 			this.cost = 5;
 			this.defense = 5;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
 
 		primaryAbility(gameState) {
-			gameState.addDecision(gameState.playing, "Choose an action.", [
-				{ name: "3 Authority", value: 0 },
-				{ name: "2 Combat", value: 1 }
-			], choice => {
-				if (choice.value === 0) {
-					gameState.getPlaying().updateCounter("authority", 3);
-				} else if (choice.value === 1) {
-					gameState.getPlaying().updateCounter("combat", 2);
+			gameState.addDecision(
+				gameState.playing,
+				"Choose an action.",
+				[{ name: "3 Authority", value: 0 }, { name: "2 Combat", value: 1 }],
+				choice => {
+					if (choice.value === 0) {
+						gameState.getPlaying().updateCounter("authority", 3);
+					} else if (choice.value === 1) {
+						gameState.getPlaying().updateCounter("combat", 2);
+					}
 				}
-			});
+			);
 		}
 
 		allyAbility(gameState) {
@@ -647,7 +699,7 @@ const cards = {
 			this.faction = "tradeFederation";
 			this.cost = 3;
 			this.abilities = {
-				primary: {func: this.primaryAbility}
+				primary: { func: this.primaryAbility }
 			};
 			this.resetCounters();
 		}
@@ -671,8 +723,8 @@ const cards = {
 			this.faction = "tradeFederation";
 			this.cost = 1;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -693,8 +745,8 @@ const cards = {
 			this.faction = "tradeFederation";
 			this.cost = 6;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -716,8 +768,8 @@ const cards = {
 			this.faction = "tradeFederation";
 			this.cost = 4;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -740,8 +792,8 @@ const cards = {
 			this.cost = 6;
 			this.defense = 6;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
@@ -764,8 +816,8 @@ const cards = {
 			this.faction = "tradeFederation";
 			this.cost = 5;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -788,23 +840,25 @@ const cards = {
 			this.cost = 3;
 			this.defense = 4;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
 
 		primaryAbility(gameState) {
-			gameState.addDecision(gameState.playing, "Choose an action.", [
-				{ name: "1 Authority", value: 0 },
-				{ name: "1 Trade", value: 1 }
-			], choice => {
-				if (choice.value === 0) {
-					gameState.getPlaying().updateCounter("authority", 1);
-				} else if (choice.value === 1) {
-					gameState.getPlaying().updateCounter("trade", 1);
+			gameState.addDecision(
+				gameState.playing,
+				"Choose an action.",
+				[{ name: "1 Authority", value: 0 }, { name: "1 Trade", value: 1 }],
+				choice => {
+					if (choice.value === 0) {
+						gameState.getPlaying().updateCounter("authority", 1);
+					} else if (choice.value === 1) {
+						gameState.getPlaying().updateCounter("trade", 1);
+					}
 				}
-			});
+			);
 		}
 
 		scrapAbility(gameState, action) {
@@ -822,8 +876,8 @@ const cards = {
 			this.faction = "machineCult";
 			this.cost = 5;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -846,7 +900,7 @@ const cards = {
 			this.cost = 3;
 			this.defense = 5;
 			this.abilities = {
-				scrap: {func: this.scrapAbility}
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
@@ -865,7 +919,7 @@ const cards = {
 			this.cost = 8;
 			this.defense = 6;
 			this.abilities = {
-				primary: {func: this.primaryAbility}
+				primary: { func: this.primaryAbility }
 			};
 			this.resetCounters();
 		}
@@ -893,7 +947,7 @@ const cards = {
 			this.cost = 6;
 			this.defense = 5;
 			this.abilities = {
-				primary: {func: this.primaryAbility}
+				primary: { func: this.primaryAbility }
 			};
 			this.resetCounters();
 		}
@@ -911,7 +965,7 @@ const cards = {
 			this.cost = 7;
 			this.defense = 6;
 			this.abilities = {
-				primary: {func: this.primaryAbility}
+				primary: { func: this.primaryAbility }
 			};
 			this.resetCounters();
 		}
@@ -939,8 +993,8 @@ const cards = {
 			this.faction = "machineCult";
 			this.cost = 2;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -962,8 +1016,8 @@ const cards = {
 			this.faction = "machineCult";
 			this.cost = 6;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -985,23 +1039,25 @@ const cards = {
 			this.faction = "machineCult";
 			this.cost = 4;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
 
 		primaryAbility(gameState) {
-			gameState.addDecision(gameState.playing, "Choose an action.", [
-				{ name: "3 Trade", value: 0 },
-				{ name: "5 Combat", value: 1 }
-			], choice => {
-				if (choice.value === 0) {
-					gameState.getPlaying().updateCounter("trade", 3);
-				} else if (choice.value === 1) {
-					gameState.getPlaying().updateCounter("combat", 5);
+			gameState.addDecision(
+				gameState.playing,
+				"Choose an action.",
+				[{ name: "3 Trade", value: 0 }, { name: "5 Combat", value: 1 }],
+				choice => {
+					if (choice.value === 0) {
+						gameState.getPlaying().updateCounter("trade", 3);
+					} else if (choice.value === 1) {
+						gameState.getPlaying().updateCounter("combat", 5);
+					}
 				}
-			});
+			);
 		}
 
 		allyAbility(gameState) {
@@ -1017,7 +1073,7 @@ const cards = {
 			this.types.add("StealthNeedle");
 			this.cost = 4;
 			this.abilities = {
-				primary: {func: this.primaryAbility.bind(this)}
+				primary: { func: this.primaryAbility.bind(this) }
 			};
 			this.resetCounters();
 			this.copied = null;
@@ -1025,7 +1081,7 @@ const cards = {
 
 		primaryAbility(gameState) {
 			let choices = [{ name: "None", value: false }];
-			gameState.getPlaying().inPlay.forEach((card) => {
+			gameState.getPlaying().inPlay.forEach(card => {
 				if (card.types.has("ship") && card.name !== "StealthNeedle") {
 					choices.push({
 						name: card.name,
@@ -1033,45 +1089,52 @@ const cards = {
 					});
 				}
 			});
-			gameState.addDecision(gameState.playing, "Choose a ship to copy.", choices, choice => {
-				if (choice.value) {
-					this.copied = new cards[choice.value];
-					this.abilities = this.copied.abilities;
-					this.name = this.copied.name;
-					this.faction = this.copied.faction;
-					this.checkAlly(gameState);
-				} else {
-					this.abilities.primary.func = () => {};
-					this.abilities.primary.used = true;
-				}
-			}, this);
+			gameState.addDecision(
+				gameState.playing,
+				"Choose a ship to copy.",
+				choices,
+				choice => {
+					if (choice.value) {
+						this.copied = new cards[choice.value]();
+						this.abilities = this.copied.abilities;
+						this.name = this.copied.name;
+						this.faction = this.copied.faction;
+						this.checkAlly(gameState);
+					} else {
+						this.abilities.primary.func = () => {};
+						this.abilities.primary.used = true;
+					}
+				},
+				this
+			);
 		}
 
 		onPhaseStart(gameState, location, index) {
-			switch(gameState.phase) {
-			case "play":
-				this.checkAlly(gameState, index);
-				break;
-			case "discard":
-				if (["hand", "inPlay"].indexOf(location) !== -1) {
-					gameState.getPlaying().discard.push(gameState.getPlaying()[location][index]);
-					gameState.getPlaying()[location][index] = null;
-				}
-				if (location === "inPlay") {
-					this.copied = null;
-					this.name = "StealthNeedle";
-					this.faction = "machineCult";
-					this.abilities = {
-						primary: {func: this.primaryAbility.bind(this)}
-					};
-				}
-				this.resetCounters();
-				break;
-			default:
-				break;
+			switch (gameState.phase) {
+				case "play":
+					this.checkAlly(gameState, index);
+					break;
+				case "discard":
+					if (["hand", "inPlay"].indexOf(location) !== -1) {
+						gameState
+							.getPlaying()
+							.discard.push(gameState.getPlaying()[location][index]);
+						gameState.getPlaying()[location][index] = null;
+					}
+					if (location === "inPlay") {
+						this.copied = null;
+						this.name = "StealthNeedle";
+						this.faction = "machineCult";
+						this.abilities = {
+							primary: { func: this.primaryAbility.bind(this) }
+						};
+					}
+					this.resetCounters();
+					break;
+				default:
+					break;
 			}
 		}
-
 	},
 
 	SupplyBot: class SupplyBot extends types.Ship {
@@ -1081,8 +1144,8 @@ const cards = {
 			this.faction = "machineCult";
 			this.cost = 3;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -1104,8 +1167,8 @@ const cards = {
 			this.faction = "machineCult";
 			this.cost = 1;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -1129,8 +1192,8 @@ const cards = {
 			this.faction = "starEmpire";
 			this.cost = 1;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -1152,8 +1215,8 @@ const cards = {
 			this.faction = "starEmpire";
 			this.cost = 2;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -1175,9 +1238,9 @@ const cards = {
 			this.faction = "starEmpire";
 			this.cost = 3;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
@@ -1204,8 +1267,8 @@ const cards = {
 			this.faction = "starEmpire";
 			this.cost = 3;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
@@ -1229,34 +1292,38 @@ const cards = {
 			this.cost = 4;
 			this.defense = 4;
 			this.abilities = {
-				primary: {func: this.primaryAbility}
+				primary: { func: this.primaryAbility }
 			};
 			this.resetCounters();
 		}
 
 		primaryAbility(gameState) {
 			// 1 trade or discard up to two cards, then draw that many cards
-			gameState.addDecision(gameState.playing, "Choose an action.", [
-				{ name: "1 Trade", value: 0 },
-				{ name: "Discard up to two cards, then draw that many", value: 1}
-			], choice => {
-				if (choice.value === 0) {
-					gameState.getPlaying().updateCounter("trade", 1);
-				} else if (choice.value === 1) {
-					discardHand(gameState, false, choice => {
-						if (choice.value !== -1) {
-							discardHand(gameState, true, choice => {
-								if (choice.value !== -1) {
-									gameState.getPlaying().draw(2);
-								} else {
-									gameState.getPlaying().draw(1);
-								}
-							});
-						}
-					});
-
+			gameState.addDecision(
+				gameState.playing,
+				"Choose an action.",
+				[
+					{ name: "1 Trade", value: 0 },
+					{ name: "Discard up to two cards, then draw that many", value: 1 }
+				],
+				choice => {
+					if (choice.value === 0) {
+						gameState.getPlaying().updateCounter("trade", 1);
+					} else if (choice.value === 1) {
+						discardHand(gameState, false, choice => {
+							if (choice.value !== -1) {
+								discardHand(gameState, true, choice => {
+									if (choice.value !== -1) {
+										gameState.getPlaying().draw(2);
+									} else {
+										gameState.getPlaying().draw(1);
+									}
+								});
+							}
+						});
+					}
 				}
-			});
+			);
 		}
 	},
 
@@ -1268,9 +1335,9 @@ const cards = {
 			this.cost = 4;
 			this.defense = 4;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
@@ -1297,8 +1364,8 @@ const cards = {
 			this.cost = 5;
 			this.defense = 4;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -1319,9 +1386,9 @@ const cards = {
 			this.faction = "starEmpire";
 			this.cost = 6;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
@@ -1350,8 +1417,8 @@ const cards = {
 			this.cost = 6;
 			this.defense = 6;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				ally: {func: this.allyAbility}
+				primary: { func: this.primaryAbility },
+				ally: { func: this.allyAbility }
 			};
 			this.resetCounters();
 		}
@@ -1372,8 +1439,8 @@ const cards = {
 			this.faction = "starEmpire";
 			this.cost = 7;
 			this.abilities = {
-				primary: {func: this.primaryAbility},
-				scrap: {func: this.scrapAbility}
+				primary: { func: this.primaryAbility },
+				scrap: { func: this.scrapAbility }
 			};
 			this.resetCounters();
 		}
@@ -1403,8 +1470,7 @@ const cards = {
 				gameState.getPlaying().updateCounter("combat", 1);
 			}
 		}
-	},
-
+	}
 };
 
 module.exports = {

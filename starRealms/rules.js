@@ -106,7 +106,7 @@ function makePlayingActions(gameState) {
 function makeAbilityActions(gameState) {
 	let actions = [];
 	gameState.getPlaying().inPlay.forEach((card, index) => {
-		card.availableAbilities().forEach((ability) => {
+		card.availableAbilities().forEach(ability => {
 			actions.push({
 				action: "ability",
 				ability: ability,
@@ -124,56 +124,60 @@ function makeCombatActions(gameState) {
 	// TODO: is not correct
 	let actions = [];
 	let combat = gameState.getPlaying().get("combat");
-	gameState._playerIds.filter((playerId) => { return playerId !== gameState.playing; }).forEach((playerId) => {
-		let bases = [];
-		let outposts = [];
-		let outpost = false;
-		gameState.players[playerId].inPlay.forEach((card, index) => {
-			if (card.types.has("outpost")) {
-				outpost = true;
-			}
-			if (card.defense <= combat) {
+	gameState._playerIds
+		.filter(playerId => {
+			return playerId !== gameState.playing;
+		})
+		.forEach(playerId => {
+			let bases = [];
+			let outposts = [];
+			let outpost = false;
+			gameState.players[playerId].inPlay.forEach((card, index) => {
 				if (card.types.has("outpost")) {
-					outposts.push({card, index});
-				} else {
-					bases.push({card, index});
+					outpost = true;
 				}
-			}
-		});
-		outposts.forEach((outpost) => {
-			actions.push({
-				action: "combat",
-				type: "opponent",
-				target: "inplay",
-				player: playerId,
-				damage: outpost.card.defense,
-				card: outpost.card.name,
-				index: outpost.index
+				if (card.defense <= combat) {
+					if (card.types.has("outpost")) {
+						outposts.push({ card, index });
+					} else {
+						bases.push({ card, index });
+					}
+				}
 			});
-		});
-		if (!outpost) {
-			bases.forEach((base) => {
+			outposts.forEach(outpost => {
 				actions.push({
 					action: "combat",
 					type: "opponent",
 					target: "inplay",
 					player: playerId,
-					damage: base.card.defense,
-					card: base.card.name,
-					index: base.index
+					damage: outpost.card.defense,
+					card: outpost.card.name,
+					index: outpost.index
 				});
 			});
-			if (combat > 0) {
-				actions.push({
-					action: "combat",
-					type: "opponent",
-					target: "deck",
-					player: playerId,
-					damage: combat
+			if (!outpost) {
+				bases.forEach(base => {
+					actions.push({
+						action: "combat",
+						type: "opponent",
+						target: "inplay",
+						player: playerId,
+						damage: base.card.defense,
+						card: base.card.name,
+						index: base.index
+					});
 				});
+				if (combat > 0) {
+					actions.push({
+						action: "combat",
+						type: "opponent",
+						target: "deck",
+						player: playerId,
+						damage: combat
+					});
+				}
 			}
-		}
-	});
+		});
 	return actions;
 }
 
@@ -182,7 +186,7 @@ function makeBuyActions(gameState) {
 	let trade = gameState.getPlaying().get("trade");
 	let topDeck = gameState.getPlaying().get("buyTopDeck");
 	// piles
-	Object.keys(gameState.shop.piles).forEach((key) => {
+	Object.keys(gameState.shop.piles).forEach(key => {
 		let pile = gameState.shop.piles[key];
 		if (pile.amount > 0 && cards._costEnum[pile.cardName] <= trade) {
 			if (cards[pile.cardName].getType() !== "ship" || topDeck === 0) {
@@ -196,17 +200,37 @@ function makeBuyActions(gameState) {
 		}
 	});
 	//rows
-	Object.keys(gameState.shop.rows).forEach((key) => {
+	Object.keys(gameState.shop.rows).forEach(key => {
 		let row = gameState.shop.rows[key];
 		row.row.forEach((card, index) => {
 			if (card && cards._costEnum[row.row[index]] <= trade) {
 				if (cards[card].getType() !== "ship" || topDeck === 0) {
-					actions.push({ action: "buy", type: "rows", target: key, index: index });
+					actions.push({
+						action: "buy",
+						type: "rows",
+						target: key,
+						index: index
+					});
 				} else if (topDeck === 1) {
-					actions.push({ action: "buy", type: "rows", target: key, index: index });
-					actions.push({ action: "buyTopDeck", type: "rows", target: key, index: index });
+					actions.push({
+						action: "buy",
+						type: "rows",
+						target: key,
+						index: index
+					});
+					actions.push({
+						action: "buyTopDeck",
+						type: "rows",
+						target: key,
+						index: index
+					});
 				} else if (topDeck === 2) {
-					actions.push({ action: "buyTopDeck", type: "rows", target: key, index: index });
+					actions.push({
+						action: "buyTopDeck",
+						type: "rows",
+						target: key,
+						index: index
+					});
 				}
 			}
 		});
@@ -232,17 +256,17 @@ function actionAbility(gameState, action) {
 }
 
 function actionCombat(gameState, action) {
-	switch(action.target) {
-	case "deck":
-		gameState.players[action.player].updateCounter("authority", -action.damage);
-		gameState.getPlaying().updateCounter("combat", -action.damage);
-		break;
-	case "inplay":
-		gameState.players[action.player].destroy(gameState, action.index);
-		gameState.getPlaying().updateCounter("combat", -action.damage);
-		break;
-	default:
-		break;
+	switch (action.target) {
+		case "deck":
+			gameState.players[action.player].updateCounter("authority", -action.damage);
+			gameState.getPlaying().updateCounter("combat", -action.damage);
+			break;
+		case "inplay":
+			gameState.players[action.player].destroy(gameState, action.index);
+			gameState.getPlaying().updateCounter("combat", -action.damage);
+			break;
+		default:
+			break;
 	}
 }
 
@@ -283,16 +307,20 @@ module.exports = {
 	phases: ["play", "discard", "draw"],
 	startingDeck: createStartingDeck,
 	shop: {
-		rows: [{
-			name: "tradeRow",
-			deck: createTradeDeck(),
-			shown: 5
-		}],
-		piles: [{
-			name: "explorers",
-			cardName: "Explorer",
-			amount: 10
-		}]
+		rows: [
+			{
+				name: "tradeRow",
+				deck: createTradeDeck(),
+				shown: 5
+			}
+		],
+		piles: [
+			{
+				name: "explorers",
+				cardName: "Explorer",
+				amount: 10
+			}
+		]
 	},
 	player: {
 		counters: [
@@ -364,4 +392,3 @@ module.exports = {
 	// functions
 	drawAmount: drawAmount
 };
-

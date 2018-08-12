@@ -20,7 +20,7 @@ app.set("view engine", "hbs");
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger("dev"));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(stylus.middleware(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname, "public")));
@@ -30,14 +30,14 @@ app.use("/rooms", rooms);
 app.use("/room", room);
 
 // catch 404 and forward to error handler
-app.use(function (req, res, next) {
+app.use(function(req, res, next) {
 	let err = new Error("Not Found");
 	err.status = 404;
 	next(err);
 });
 
 // error handler
-app.use(function (err, req, res) {
+app.use(function(err, req, res) {
 	// set locals, only providing error in development
 	res.locals.message = err.message;
 	res.locals.error = req.app.get("env") === "development" ? err : {};

@@ -27,7 +27,7 @@ module.exports = class Shop {
 
 	getRowsState() {
 		let state = {};
-		Object.keys(this.rows).forEach((row) => {
+		Object.keys(this.rows).forEach(row => {
 			state[row] = {
 				row: this.rows[row].row,
 				deck: this.rows[row].deck.length
@@ -42,7 +42,7 @@ module.exports = class Shop {
 		}
 		let rowDeck = helper.shuffleCopy(deck);
 		this.rows[name] = {
-			row: rowDeck.splice(0, (shown) ? shown : 5),
+			row: rowDeck.splice(0, shown ? shown : 5),
 			deck: rowDeck
 		};
 	}
@@ -56,5 +56,4 @@ module.exports = class Shop {
 			amount: amount
 		};
 	}
-
 };

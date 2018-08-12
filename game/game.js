@@ -18,7 +18,7 @@ module.exports = class Game {
 	}
 
 	playerLoaded() {
-		this.socketIds.forEach((socketId) => {
+		this.socketIds.forEach(socketId => {
 			if (this.io.sockets.connected[socketId].loaded === false) {
 				return false;
 			}
@@ -41,15 +41,18 @@ module.exports = class Game {
 		// this.actions = this.rules.makeActions(this.gameState);
 		this.actions = this.gameState.makeActions();
 
-		switch(this.actions.length) {
-		case 0:
-			break;
-		case 1:
-			this.handleAction(this.actions[0]);
-			break;
-		default:
-			this.io.sockets.connected[this.gameState.playing].emit("requestAction", JSON.stringify(this.actions));
-			break;
+		switch (this.actions.length) {
+			case 0:
+				break;
+			case 1:
+				this.handleAction(this.actions[0]);
+				break;
+			default:
+				this.io.sockets.connected[this.gameState.playing].emit(
+					"requestAction",
+					JSON.stringify(this.actions)
+				);
+				break;
 		}
 	}
 
@@ -59,22 +62,24 @@ module.exports = class Game {
 		let log = this.gameState.applyAction(action);
 		this.all().emit("log", playing + " - Action: " + log);
 		this.next();
-
 	}
 
 	requestDecision() {
 		this.sendGameState();
 		let choices = this.gameState._choices;
-		switch(choices.length) {
-		case 0:
-			this.handleDecision(null);
-			break;
-		case 1:
-			this.handleDecision(choices[0]);
-			break;
-		default:
-			this.io.sockets.connected[this.gameState.deciding].emit("requestDecision", JSON.stringify(choices));
-			break;
+		switch (choices.length) {
+			case 0:
+				this.handleDecision(null);
+				break;
+			case 1:
+				this.handleDecision(choices[0]);
+				break;
+			default:
+				this.io.sockets.connected[this.gameState.deciding].emit(
+					"requestDecision",
+					JSON.stringify(choices)
+				);
+				break;
 		}
 	}
 
@@ -88,7 +93,6 @@ module.exports = class Game {
 		}
 
 		this.next();
-
 	}
 
 	next() {
@@ -105,7 +109,7 @@ module.exports = class Game {
 	}
 
 	sendGameState() {
-		this.socketIds.forEach((socketId) => {
+		this.socketIds.forEach(socketId => {
 			// this.io.to(socketId).emit('gameState', this.rules.censorGameState(this.gameState, socketId));
 			this.io.to(socketId).emit("gameState", this.gameState.getState(socketId));
 		});

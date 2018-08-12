@@ -30,12 +30,12 @@ module.exports = class GameState {
 	loadRules() {
 		if (this._rules.game) {
 			if (this._rules.game.makes) {
-				this._rules.game.makes.forEach((make) => {
+				this._rules.game.makes.forEach(make => {
 					this.addActionMake(make.phase, make.func);
 				});
 			}
 			if (this._rules.game.applications) {
-				this._rules.game.applications.forEach((effect) => {
+				this._rules.game.applications.forEach(effect => {
 					this.addActionEffect(effect.action, effect.func);
 				});
 			}
@@ -43,21 +43,21 @@ module.exports = class GameState {
 
 		if (this._rules.shop) {
 			if (this._rules.shop.rows) {
-				this._rules.shop.rows.forEach((row) => {
+				this._rules.shop.rows.forEach(row => {
 					this.shop.createRow(row.name, row.deck, row.shown);
 				});
 			}
 			if (this._rules.shop.piles) {
-				this._rules.shop.piles.forEach((pile) => {
+				this._rules.shop.piles.forEach(pile => {
 					this.shop.createPile(pile.name, pile.cardName, pile.amount);
 				});
 			}
 		}
 
 		if (this._rules.player && this._rules.player.counters) {
-			this._playerIds.forEach((playerId) => {
-				let player  = this.players[playerId];
-				this._rules.player.counters.forEach((counter) => {
+			this._playerIds.forEach(playerId => {
+				let player = this.players[playerId];
+				this._rules.player.counters.forEach(counter => {
 					player.createCounter(counter.name, counter.value);
 				});
 			});
@@ -68,7 +68,7 @@ module.exports = class GameState {
 		this.decision = true;
 		this.deciding = playerId;
 		this.description = description;
-		this._decisionCallback = (choice) => {
+		this._decisionCallback = choice => {
 			this.decision = false;
 			if (choice) {
 				callback(choice);
@@ -79,30 +79,32 @@ module.exports = class GameState {
 
 	onPhaseStart() {
 		// TODO: allow easy change to counter resets and drawing
-		switch(this.phase) {
-		case "draw":
-			this.getPlaying().draw(this._rules.drawAmount(this.turn, this._playerIds.indexOf(this.playing)));
-			break;
-		case "discard":
-			this.getPlaying().setCounter("trade", 0);
-			this.getPlaying().setCounter("combat", 0);
-			this.getPlaying().setCounter("blobs", 0);
-			this.getPlaying().setCounter("buyTopDeck", 0);
-			break;
-		default:
-			break;
+		switch (this.phase) {
+			case "draw":
+				this.getPlaying().draw(
+					this._rules.drawAmount(this.turn, this._playerIds.indexOf(this.playing))
+				);
+				break;
+			case "discard":
+				this.getPlaying().setCounter("trade", 0);
+				this.getPlaying().setCounter("combat", 0);
+				this.getPlaying().setCounter("blobs", 0);
+				this.getPlaying().setCounter("buyTopDeck", 0);
+				break;
+			default:
+				break;
 		}
 	}
 
 	onTurnStart() {
 		// TODO: allow easy change to end condition
 		let alive = [];
-		this._playerIds.forEach((playerId) => {
+		this._playerIds.forEach(playerId => {
 			if (this.players[playerId].get("authority") > 0) {
 				alive.push(playerId);
 			}
 		});
-		let winner = (alive.length === 1) ? alive[0] : null;
+		let winner = alive.length === 1 ? alive[0] : null;
 		if (winner) {
 			this._running = false;
 			this.winner = winner;
@@ -123,11 +125,15 @@ module.exports = class GameState {
 		player.hand.forEach((card, index) => {
 			card.onPhaseStart(this, "hand", index);
 		});
-		player.hand = player.hand.filter((card) => { return (card !== null); });
+		player.hand = player.hand.filter(card => {
+			return card !== null;
+		});
 		player.inPlay.forEach((card, index) => {
 			card.onPhaseStart(this, "inPlay", index);
 		});
-		player.inPlay = player.inPlay.filter((card) => { return (card !== null); });
+		player.inPlay = player.inPlay.filter(card => {
+			return card !== null;
+		});
 	}
 
 	nextTurn() {
@@ -159,7 +165,7 @@ module.exports = class GameState {
 
 	createEffects() {
 		return {
-			end: (gameState) => {
+			end: gameState => {
 				gameState.nextPhase();
 				return "end " + gameState.phase;
 			}
@@ -168,7 +174,7 @@ module.exports = class GameState {
 
 	makeActions() {
 		let actions = [{ action: "end", type: "player", target: "deck" }];
-		this._makes[this.phase].forEach((make) => {
+		this._makes[this.phase].forEach(make => {
 			actions.push(...make(this));
 		});
 		return actions;
@@ -185,7 +191,7 @@ module.exports = class GameState {
 
 	createMakes() {
 		let makes = {};
-		this._phases.forEach((phase) => {
+		this._phases.forEach(phase => {
 			makes[phase] = [];
 		});
 		return makes;
@@ -199,18 +205,18 @@ module.exports = class GameState {
 	}
 
 	/**
-     * Return a random playerId
-     */
+	 * Return a random playerId
+	 */
 	randomPlayer() {
 		let index = Math.floor(Math.random() * this._playerIds.length);
 		return this._playerIds[index];
 	}
 
 	/**
-     * Get the game state as an object censored for playerId
-     * @param playerId
-     * @returns {{}}
-     */
+	 * Get the game state as an object censored for playerId
+	 * @param playerId
+	 * @returns {{}}
+	 */
 	getState(playerId) {
 		return {
 			phase: this.phase,
@@ -226,30 +232,29 @@ module.exports = class GameState {
 	}
 
 	/**
-     * Get the game states of each player
-     * @param playerId
-     * @returns {{}}
-     */
+	 * Get the game states of each player
+	 * @param playerId
+	 * @returns {{}}
+	 */
 	getPlayerStates(playerId) {
 		let states = {};
-		this._playerIds.forEach((id) => {
+		this._playerIds.forEach(id => {
 			states[id] = this.players[id].getState(playerId !== id);
 		});
 		return states;
 	}
 
 	/**
-     * Creates on object containing
-     * @param playerIds
-     * @param deck
-     * @returns {{}}
-     */
+	 * Creates on object containing
+	 * @param playerIds
+	 * @param deck
+	 * @returns {{}}
+	 */
 	static createPlayers(playerIds, createDeck) {
 		let players = {};
-		playerIds.forEach((playerId) => {
+		playerIds.forEach(playerId => {
 			players[playerId] = new Player(createDeck());
 		});
 		return players;
 	}
-
 };

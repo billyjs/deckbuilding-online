@@ -12,5 +12,4 @@ module.exports = class GameManager {
 	getGame(gameId) {
 		return this.games[gameId];
 	}
-
 };

@@ -2,8 +2,22 @@ const express = require("express");
 const router = express.Router();
 
 let rooms = [
-	{name: "Room1", description: "Star Realms 2 Player", id: "room1", players: 2, playing: 0, viewers: 0},
-	{name: "Room2", description: "Star Realms 4 Player", id: "room2",  players: 4, playing: 0, viewers: 0}
+	{
+		name: "Room1",
+		description: "Star Realms 2 Player",
+		id: "room1",
+		players: 2,
+		playing: 0,
+		viewers: 0
+	},
+	{
+		name: "Room2",
+		description: "Star Realms 4 Player",
+		id: "room2",
+		players: 4,
+		playing: 0,
+		viewers: 0
+	}
 ];
 
 let ids = ["room1", "room2"];

@@ -1,4 +1,4 @@
-module.exports =  class Card {
+module.exports = class Card {
 	constructor(player) {
 		this.player = player;
 		this.types = new Set(["card"]);
@@ -10,7 +10,7 @@ module.exports =  class Card {
 
 	availableAbilities() {
 		let abilities = [];
-		Object.keys(this.abilities).forEach((ability) => {
+		Object.keys(this.abilities).forEach(ability => {
 			if (this.abilities[ability].available && !this.abilities[ability].used) {
 				abilities.push(ability);
 			}

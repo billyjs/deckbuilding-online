@@ -12,20 +12,20 @@ module.exports = class Player {
 	getState(censored) {
 		return {
 			deck: this.deck.length,
-			hand: (censored) ? this.hand.length : this.hand.map((card) => card.name),
-			discard: this.discard.map((card) => card.name),
-			inPlay: this.inPlay.map((card) => card.name),
+			hand: censored ? this.hand.length : this.hand.map(card => card.name),
+			discard: this.discard.map(card => card.name),
+			inPlay: this.inPlay.map(card => card.name),
 			counters: this.counters
 		};
 	}
 
 	/**
-     * Create a counter for the player
-     * @param counter
-     * @param value (Optional default 0)
-     */
+	 * Create a counter for the player
+	 * @param counter
+	 * @param value (Optional default 0)
+	 */
 	createCounter(counter, value) {
-		this.counters[counter] = (value) ? value : 0;
+		this.counters[counter] = value ? value : 0;
 	}
 
 	updateCounter(counter, value) {
@@ -42,7 +42,7 @@ module.exports = class Player {
 
 	play(gameState, index) {
 		let card = this.hand[index];
-		this.inPlay.forEach((inPlay) => {
+		this.inPlay.forEach(inPlay => {
 			inPlay.onOtherPlay(gameState, card);
 		});
 		this.inPlay.push(...this.hand.splice(index, 1));
@@ -95,5 +95,4 @@ module.exports = class Player {
 	toDeck(card) {
 		this.deck.unshift(card);
 	}
-
 };

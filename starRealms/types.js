@@ -3,9 +3,11 @@ const Card = require("../game/card");
 function isAlly(card, other) {
 	// card is allied with other if they are of the same faction, the other cards is "MechWorld" or if the card is
 	// a in the Machine Cult faction and the other card is "StealthNeedle"
-	return (card.faction === other.faction) ||
-        (other.name === "MechWorld") ||
-        (card.faction === "machineCult" && other.types.has("StealthNeedle"));
+	return (
+		card.faction === other.faction ||
+		other.name === "MechWorld" ||
+		(card.faction === "machineCult" && other.types.has("StealthNeedle"))
+	);
 }
 
 class Ship extends Card {
@@ -25,19 +27,19 @@ class Ship extends Card {
 	}
 
 	onPhaseStart(gameState, location, index) {
-		switch(gameState.phase) {
-		case "play":
-			this.checkAlly(gameState, index);
-			break;
-		case "discard":
-			if (["hand", "inPlay"].indexOf(location) !== -1) {
-				gameState.getPlaying().discard.push(gameState.getPlaying()[location][index]);
-				gameState.getPlaying()[location][index] = null;
-			}
-			this.resetCounters();
-			break;
-		default:
-			break;
+		switch (gameState.phase) {
+			case "play":
+				this.checkAlly(gameState, index);
+				break;
+			case "discard":
+				if (["hand", "inPlay"].indexOf(location) !== -1) {
+					gameState.getPlaying().discard.push(gameState.getPlaying()[location][index]);
+					gameState.getPlaying()[location][index] = null;
+				}
+				this.resetCounters();
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -64,7 +66,7 @@ class Ship extends Card {
 			this.abilities.scrap.used = false;
 		}
 	}
-	onOtherPlay(gameState, other)  {
+	onOtherPlay(gameState, other) {
 		if (this.abilities.ally && isAlly(this, other)) {
 			this.abilities.ally.available = true;
 		}
@@ -89,21 +91,20 @@ class Base extends Card {
 		this.checkAlly(gameState, gameState.getPlaying().inPlay.length - 1);
 	}
 
-
 	onPhaseStart(gameState, location, index) {
-		switch(gameState.phase) {
-		case "play":
-			this.checkAlly(gameState, index);
-			break;
-		case "discard":
-			if (["hand"].indexOf(location) !== -1) {
-				gameState.getPlaying().discard.push(gameState.getPlaying()[location][index]);
-				gameState.getPlaying()[location][index] = null;
-			}
-			this.resetCounters();
-			break;
-		default:
-			break;
+		switch (gameState.phase) {
+			case "play":
+				this.checkAlly(gameState, index);
+				break;
+			case "discard":
+				if (["hand"].indexOf(location) !== -1) {
+					gameState.getPlaying().discard.push(gameState.getPlaying()[location][index]);
+					gameState.getPlaying()[location][index] = null;
+				}
+				this.resetCounters();
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -130,7 +131,7 @@ class Base extends Card {
 			this.abilities.scrap.used = false;
 		}
 	}
-	onOtherPlay(gameState, other)  {
+	onOtherPlay(gameState, other) {
 		if (this.abilities.ally && this.faction === other.faction) {
 			this.abilities.ally.available = true;
 		}

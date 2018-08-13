@@ -25,6 +25,9 @@ module.exports = class GameState {
 		this.winner = null;
 		this.playing = this._playerIds[0];
 		this.turn = 0;
+
+		this.loadRules();
+		this.firstDraw();
 	}
 
 	loadRules() {

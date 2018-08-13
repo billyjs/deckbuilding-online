@@ -571,5 +571,3 @@ function pointToScreen(x, y, z) {
 		y: p2D.y
 	};
 }
-
-window.onload = init;

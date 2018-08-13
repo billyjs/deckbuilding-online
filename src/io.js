@@ -43,22 +43,22 @@ module.exports = (io, gameManager) => {
 			});
 		});
 		socket.on("loaded", () => {
-			if (socket.room) {
+			let game = gameManager.getGame(socket.game);
+			if (game.running) {
 				socket.loaded = true;
-				let game = gameManager.getGame(socket.room);
-				if (game) {
-					game.playerLoaded();
-				}
+				game.onPlayerLoaded(socket);
 			}
 		});
 		socket.on("responseAction", action => {
-			if (socket.room) {
-				gameManager.getGame(socket.room).handleAction(action);
+			let game = gameManager.getGame(socket.game);
+			if (game) {
+				game.handleAction(action);
 			}
 		});
 		socket.on("responseDecision", choice => {
-			if (socket.room) {
-				gameManager.getGame(socket.room).handleDecision(choice);
+			let game = gameManager.getGame(socket.game);
+			if (game) {
+				game.handleDecision(choice);
 			}
 		});
 		socket.on("nickname", nickname => {
@@ -68,6 +68,79 @@ module.exports = (io, gameManager) => {
 					sendPlayerList(io, room);
 				}
 			});
+		});
+		socket.on("newGame", request => {
+			if (request.name && typeof request.name === "string") {
+				let game = gameManager.newGame(io, request.game);
+				game.addPlayer(request.name, socket);
+				socket.emit("responseJoin", {
+					gameId: game.gameId,
+					game: game.name,
+					success: true,
+					admin: true
+				});
+			} else {
+				socket.emit("responseJoin", {
+					gameId: null,
+					success: false,
+					message: "Name must not be empty"
+				});
+			}
+		});
+		socket.on("joinGame", request => {
+			let gameId = request.gameId.toUpperCase();
+			let game = gameManager.getGame(gameId);
+			if (!request.name || typeof request.name !== "string") {
+				socket.emit("responseJoin", {
+					gameId: gameId,
+					success: false,
+					message: "Name must not be empty"
+				});
+			} else if (!game) {
+				socket.emit("responseJoin", {
+					gameId: gameId,
+					success: false,
+					message: "Game does not exist"
+				});
+			} else if (game.running) {
+				socket.emit("responseJoin", {
+					gameId: gameId,
+					success: false,
+					message: "Game is already running"
+				});
+			} else {
+				game.addPlayer(request.name, socket);
+				socket.emit("responseJoin", {
+					gameId: gameId,
+					game: game.name,
+					success: true
+				});
+			}
+		});
+		socket.on("startGame", request => {
+			let gameId = request.gameId.toUpperCase();
+			let game = gameManager.getGame(gameId);
+			if (!game) {
+				socket.emit("responseStart", {
+					gameId: gameId,
+					success: false,
+					message: "Game does not exist"
+				});
+			} else {
+				let error = game.startGame(socket);
+				if (error) {
+					socket.emit("responseStart", {
+						gameId: gameId,
+						success: false,
+						message: error.message || "Unable to start game"
+					});
+				} else {
+					io.to(gameId).emit("responseStart", {
+						gameId: gameId,
+						success: true
+					});
+				}
+			}
 		});
 	});
 };

@@ -1,2 +1,27 @@
-<h1>{{title}}</h1>
-<p>Welcome to {{title}}</p>
+<!-- load socket.io -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
+
+<!-- load three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"></script>
+
+<!-- load scripts -->
+<script src="/javascripts/main.js"></script>
+
+<div id="joining">
+    <input type="text" name="gameId" id="gameIdBox"><br>
+    <input type="text" name="name" id="nameBox"><br>
+    <select id="gameSelect"></select>
+    <button id="join">Join Game</button>
+    <button id="new">New Game</button>
+</div>
+
+<div style="display: none" id="waiting">
+    <h1 id="gameId"></h1>
+    <ul id="players"></ul>
+    <button style="display: none" id="start">Start Game</button>
+</div>
+
+<div id="labels"></div>
+<div id="decision"></div>
+
+<script src="/javascripts/socket.js"></script>

@@ -1,35 +1,87 @@
 const GameState = require("./gameState");
+const debug = require("debug")("deck-building-game:game");
 
 module.exports = class Game {
-	constructor(io, gameId, socketIds, rules) {
+	constructor(io, gameId, name, callback) {
 		this.io = io;
-		this.rules = rules;
+		this.name = name;
+		this.rules = require("../" + this.name + "/rules");
 		this.gameId = gameId;
-		this.socketIds = socketIds;
-		this.gameState = new GameState(this.socketIds, this.rules);
+		this.callback = callback;
+		this.socketIds = [];
+		this.sockets = [];
+		this.gameState = null;
+		this.running = false;
+		// this.gameState = new GameState(this.socketIds, this.rules);
 		// this._running = false;
 
 		// current valid actions
 		this.actions = [];
 
-		this.gameState.loadRules();
-		this.gameState.firstDraw();
+		// this.gameState.loadRules();
+		// this.gameState.firstDraw();
 		// this._running = true;
 	}
 
-	playerLoaded() {
-		this.socketIds.forEach(socketId => {
-			if (this.io.sockets.connected[socketId].loaded === false) {
+	addPlayer(name, socket) {
+		socket.name = name;
+		socket.game = this.gameId;
+		socket.join(this.gameId);
+		this.socketIds.push(socket.id);
+		this.sockets.push(socket);
+		socket.on("disconnecting", this.onPlayerDisconnecting.bind(this, socket));
+		this.sendPlayerList();
+	}
+
+	removePlayer(socketId) {
+		let index = this.socketIds.indexOf(socketId);
+		if (index !== -1) {
+			this.socketIds.splice(index, 1);
+			this.sockets.splice(index, 1);
+		}
+		this.sendPlayerList();
+	}
+
+	onPlayerDisconnecting(socket) {
+		if (this.running) {
+			this.removePlayer(socket.id);
+			this.all().emit("gameCanceled", {
+				message: "Player " + socket.name + " disconnected from the game"
+			});
+		} else {
+			this.removePlayer(socket.id);
+			this.sendAdmin();
+		}
+		if (this.sockets.length !== 0) {
+			this.callback();
+		}
+	}
+
+	onPlayerLoaded(socket) {
+		debug("Player %s loaded in game %s", socket.name, this.gameId);
+		this.sockets.forEach(socket => {
+			if (socket.loaded === false) {
 				return false;
 			}
 		});
-
-		this.startGame();
+		this.requestAction();
+		return true;
 	}
 
-	startGame() {
+	startGame(socket) {
+		if (this.sockets.length !== 2) {
+			return { message: "Incorrect amount of players" };
+		}
+		if (this.sockets[0] !== socket) {
+			return { message: "Room creator must start game" };
+		}
+		if (this.running) {
+			return { message: "Game is already started" };
+		}
+		debug("Game started: %s", this.gameId);
+		this.running = true;
+		this.gameState = new GameState(this.socketIds, this.rules);
 		this.all().emit("log", "Game Started");
-		this.requestAction();
 	}
 
 	requestAction() {
@@ -110,8 +162,23 @@ module.exports = class Game {
 
 	sendGameState() {
 		this.socketIds.forEach(socketId => {
-			// this.io.to(socketId).emit('gameState', this.rules.censorGameState(this.gameState, socketId));
 			this.io.to(socketId).emit("gameState", this.gameState.getState(socketId));
+		});
+	}
+
+	sendPlayerList() {
+		this.all().emit("playerList", {
+			players: this.sockets.map(socket => {
+				return socket.name;
+			})
+		});
+	}
+
+	sendAdmin() {
+		this.sockets[0].emit("responseJoin", {
+			gameId: this.gameId,
+			success: true,
+			admin: true
 		});
 	}
 

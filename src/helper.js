@@ -1,6 +1,6 @@
 /**
  * Shuffle an array in place
- * @param array
+ * @param {[]} array
  */
 function shuffle(array) {
 	let counter = array.length;
@@ -13,6 +13,11 @@ function shuffle(array) {
 	}
 }
 
+/**
+ * Shuffle and return a copy of an array
+ * @param {[]} array
+ * @returns {[]}
+ */
 function shuffleCopy(array) {
 	let copy = array.slice();
 	this.shuffle(copy);

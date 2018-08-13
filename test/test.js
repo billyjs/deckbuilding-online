@@ -1,5 +1,5 @@
 const assert = require("chai").assert;
-const Player = require("../game/player");
+const Player = require("../src/game/player");
 
 describe("Player", function() {
 	const deck = [];

@@ -24,6 +24,7 @@ module.exports = class Game {
 	}
 
 	addPlayer(name, socket) {
+		name = name.substring(0, 12);
 		socket.name = name;
 		socket.game = this.gameId;
 		socket.join(this.gameId);
@@ -52,7 +53,7 @@ module.exports = class Game {
 			this.removePlayer(socket.id);
 			this.sendAdmin();
 		}
-		if (this.sockets.length !== 0) {
+		if (this.sockets.length === 0) {
 			this.callback();
 		}
 	}
@@ -175,11 +176,13 @@ module.exports = class Game {
 	}
 
 	sendAdmin() {
-		this.sockets[0].emit("responseJoin", {
-			gameId: this.gameId,
-			success: true,
-			admin: true
-		});
+		if (this.sockets.length > 0) {
+			this.sockets[0].emit("responseJoin", {
+				gameId: this.gameId,
+				success: true,
+				admin: true
+			});
+		}
 	}
 
 	all() {

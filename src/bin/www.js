@@ -24,7 +24,8 @@ const server = http.createServer(app);
 /**
  * Create GameManager.
  */
-const gameManager = new (require("../game/gameManager"))();
+// TODO make list of games not hardcoded
+const gameManager = new (require("../game/gameManager"))(["starRealms", "starRealmsQuick"]);
 
 /**
  * Create socket.io.

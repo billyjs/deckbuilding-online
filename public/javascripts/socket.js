@@ -9,6 +9,7 @@ let decidingMesh = null;
 let layout = null;
 
 // document elements
+const header = document.getElementsByClassName("header")[0];
 const joining = document.getElementById("joining");
 const gameIdBox = document.getElementById("gameIdBox");
 const nameBox = document.getElementById("nameBox");
@@ -17,6 +18,7 @@ const newButton = document.getElementById("new");
 
 const waiting = document.getElementById("waiting");
 const gameIdText = document.getElementById("gameId");
+const gameNameText = document.getElementById("gameName");
 const playerList = document.getElementById("players");
 const startButton = document.getElementById("start");
 
@@ -66,10 +68,16 @@ startButton.onclick = () => {
 socket.on("responseJoin", response => {
 	if (response.success) {
 		joining.style.display = "none";
+		header.style.display = "none";
 		waiting.style.display = "block";
 		gameIdText.innerText = response.gameId;
+		gameNameText.innerText = response.game
+			.replace(/([a-z](?=[A-Z]))/g, "$1 ")
+			.replace(/(^\w)/g, c => c.toUpperCase());
 		gameId = response.gameId;
 		gameName = response.game;
+	} else {
+		alert(response.message || "Could not join game");
 	}
 	if (response.admin) {
 		startButton.style.display = "block";
@@ -85,6 +93,8 @@ socket.on("responseStart", response => {
 			layout = content;
 			init();
 		});
+	} else {
+		alert(response.message || "Could not start game");
 	}
 });
 

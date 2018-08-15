@@ -4,19 +4,47 @@
 <!-- load three.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"></script>
 
+<!-- load jQuery -->
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+<!-- load Select2 -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+
+<!-- load fonts -->
+<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+
 <!-- load scripts -->
 <script src="/javascripts/main.js"></script>
 
+<div class="header">
+    <h1>Welcome to Deckbuilding Online</h1>
+    <p>Enter your name then join a game from its Game ID or start a new game from the list of supported deckbuilding games.</p>
+</div>
+
 <div id="joining">
-    <input type="text" name="gameId" id="gameIdBox"><br>
-    <input type="text" name="name" id="nameBox"><br>
-    <select id="gameSelect"></select>
-    <button id="join">Join Game</button>
-    <button id="new">New Game</button>
+
+    <input type="text" name="name" id="nameBox" class="" placeholder="Name"><br>
+
+    <div class="left">
+        <input type="text" name="gameId" id="gameIdBox" class="uppercase" placeholder="Game ID"><br>
+        <button id="join">Join Game</button>
+    </div>
+
+    <!--<div class="sep"></div>-->
+
+    <div class="right">
+        <select required name="gameSelect" id="gameSelect" class="">
+            <option></option>
+        </select>
+        <button id="new">New Game</button>
+    </div>
 </div>
 
 <div style="display: none" id="waiting">
-    <h1 id="gameId"></h1>
+    <h1>Game ID<br><span id="gameId"></span></h1>
+    <h2>Playing<br><span id="gameName"></span></h2>
+    <h2>Players</h2>
     <ul id="players"></ul>
     <button style="display: none" id="start">Start Game</button>
 </div>
@@ -25,3 +53,14 @@
 <div id="decision"></div>
 
 <script src="/javascripts/socket.js"></script>
+
+<script>
+    // testing Select2
+    $(document).ready(function() {
+    	$("#gameSelect").select2({
+            placeholder: "Select a Game...",
+            theme: "flat",
+            width: "width: 100%"
+        });
+    });
+</script>

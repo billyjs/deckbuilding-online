@@ -2,11 +2,15 @@ const Game = require("./game");
 const debug = require("debug")("deck-building-game:gameManager");
 
 module.exports = class GameManager {
-	constructor() {
+	constructor(supported) {
 		this.games = {};
+		this.supported = supported;
 	}
 
 	newGame(io, name) {
+		if (this.supported.indexOf(name) === -1) {
+			return null;
+		}
 		let gameId = this.generateId();
 		let game = new Game(io, gameId, name, this.cleanupGame.bind(this, gameId));
 		this.games[gameId] = game;

@@ -72,13 +72,21 @@ module.exports = (io, gameManager) => {
 		socket.on("newGame", request => {
 			if (request.name && typeof request.name === "string") {
 				let game = gameManager.newGame(io, request.game);
-				game.addPlayer(request.name, socket);
-				socket.emit("responseJoin", {
-					gameId: game.gameId,
-					game: game.name,
-					success: true,
-					admin: true
-				});
+				if (game) {
+					game.addPlayer(request.name, socket);
+					socket.emit("responseJoin", {
+						gameId: game.gameId,
+						game: game.name,
+						success: true,
+						admin: true
+					});
+				} else {
+					socket.emit("responseJoin", {
+						gameId: null,
+						success: false,
+						message: "Game is not supported"
+					});
+				}
 			} else {
 				socket.emit("responseJoin", {
 					gameId: null,

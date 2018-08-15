@@ -1,7 +1,7 @@
 /* global THREE, socket, layout, labels */
 
 let camera, scene, renderer;
-let meshes;
+let meshes, outlines;
 
 const BOARD_HEIGHT = 55;
 const BOARD_WIDTH = 88; // aspect ration 16:10
@@ -85,7 +85,7 @@ function init() {
 	});
 
 	let board = new THREE.Mesh(geometry, material);
-	scene.add(board);
+	// scene.add(board);
 	board.position.z = -1;
 
 	// board sections
@@ -97,7 +97,7 @@ function init() {
 
 	let section = new THREE.Mesh(geometry, material);
 	section.position.y = -2 * SECTION_HEIGHT;
-	scene.add(section);
+	// scene.add(section);
 
 	material = new THREE.MeshBasicMaterial({
 		color: 0xff0000,
@@ -106,7 +106,7 @@ function init() {
 
 	section = new THREE.Mesh(geometry, material);
 	section.position.y = 2 * SECTION_HEIGHT;
-	scene.add(section);
+	// scene.add(section);
 
 	material = new THREE.MeshBasicMaterial({
 		color: 0x0000ff,
@@ -114,7 +114,7 @@ function init() {
 	});
 
 	section = new THREE.Mesh(geometry, material);
-	scene.add(section);
+	// scene.add(section);
 
 	meshes = {
 		areas: {},
@@ -134,19 +134,7 @@ function init() {
 		rows: {}
 	};
 
-	// testing code
-
-	// meshes.areas.inplay = createArea(0xff0000, 0, - SECTION_HEIGHT, BOARD_WIDTH, SECTION_HEIGHT);
-	// displayDeck(10);
-	// displayHand([null,null,null, null], 0, -2 * SECTION_HEIGHT);
-
-	// geometry = new THREE.PlaneGeometry(0.8 * BOARD_WIDTH, 2 * SECTION_HEIGHT);
-	// material = new THREE.MeshBasicMaterial({ color: 0x020202, side: THREE.DoubleSide });
-	// let mesh = new THREE.Mesh(geometry, material);
-	// scene.add(mesh);
-	// mesh.position.z = 2;
-
-	//
+	outlines = [];
 
 	renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 	renderer.setPixelRatio(window.devicePixelRatio);
@@ -554,6 +542,51 @@ function resetClickableMeshes() {
 			} else if (meshes[key][key2]) {
 				meshes[key][key2].forEach(mesh => {
 					mesh.actions = [];
+				});
+			}
+		});
+	});
+}
+
+function highlightMeshes() {
+	outlines.forEach(outline => {
+		scene.remove(outline);
+	});
+	outlines = [];
+	Object.keys(meshes).forEach(key => {
+		Object.keys(meshes[key]).forEach(key2 => {
+			if (meshes[key][key2] && !Array.isArray(meshes[key][key2])) {
+				if (meshes[key][key2].actions.length > 0) {
+					// make highlights
+					let material = new THREE.MeshBasicMaterial({
+						color: 0xff7700,
+						transparent: true,
+						opacity: 0.7
+					});
+					let mesh = new THREE.Mesh(meshes[key][key2].geometry, material);
+					scene.add(mesh);
+					mesh.position.copy(meshes[key][key2].position);
+					mesh.position.z -= 0.01;
+					mesh.scale.multiplyScalar(1.05);
+					console.log(mesh.position, meshes[key][key2].position);
+					outlines.push(mesh);
+				}
+			} else if (meshes[key][key2]) {
+				meshes[key][key2].forEach(mesh => {
+					if (mesh.actions.length > 0) {
+						// make highlights
+						let material = new THREE.MeshBasicMaterial({
+							color: 0xff7700,
+							transparent: true,
+							opacity: 0.7
+						});
+						let outline = new THREE.Mesh(mesh.geometry, material);
+						scene.add(outline);
+						outline.position.copy(mesh.position);
+						outline.position.z -= 0.01;
+						outline.scale.multiplyScalar(1.05);
+						outlines.push(outline);
+					}
 				});
 			}
 		});

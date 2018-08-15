@@ -238,6 +238,7 @@ socket.on("gameState", gs => {
 			);
 		}
 	});
+	highlightMeshes();
 });
 
 // when a requestAction message is received from the server
@@ -261,6 +262,7 @@ socket.on("requestAction", actions => {
 			}
 		});
 	});
+	highlightMeshes();
 });
 
 // when a requestDecision message is received from the server

@@ -73,13 +73,21 @@ module.exports = (io, gameManager) => {
 			if (request.name && typeof request.name === "string") {
 				let game = gameManager.newGame(io, request.game);
 				if (game) {
-					game.addPlayer(request.name, socket);
-					socket.emit("responseJoin", {
-						gameId: game.gameId,
-						game: game.name,
-						success: true,
-						admin: true
-					});
+					let added = game.addPlayer(request.name, socket);
+					if (added) {
+						socket.emit("responseJoin", {
+							gameId: game.gameId,
+							game: game.name,
+							success: true,
+							admin: true
+						});
+					} else {
+						socket.emit("responseJoin", {
+							gameId: game.gameId,
+							success: false,
+							message: "Game is full"
+						});
+					}
 				} else {
 					socket.emit("responseJoin", {
 						gameId: null,
@@ -117,12 +125,20 @@ module.exports = (io, gameManager) => {
 					message: "Game is already running"
 				});
 			} else {
-				game.addPlayer(request.name, socket);
-				socket.emit("responseJoin", {
-					gameId: gameId,
-					game: game.name,
-					success: true
-				});
+				let added = game.addPlayer(request.name, socket);
+				if (added) {
+					socket.emit("responseJoin", {
+						gameId: gameId,
+						game: game.name,
+						success: true
+					});
+				} else {
+					socket.emit("responseJoin", {
+						gameId: gameId,
+						success: false,
+						message: "Game is full"
+					});
+				}
 			}
 		});
 		socket.on("startGame", request => {

@@ -304,6 +304,10 @@ function actionBuyTopDeck(gameState, action) {
 
 module.exports = {
 	cards: cards,
+	players: {
+		min: 2,
+		max: 2
+	},
 	phases: ["play", "discard", "draw"],
 	startingDeck: createStartingDeck,
 	shop: {

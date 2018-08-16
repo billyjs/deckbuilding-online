@@ -24,14 +24,18 @@ module.exports = class Game {
 	}
 
 	addPlayer(name, socket) {
-		name = name.substring(0, 12);
-		socket.name = name;
-		socket.game = this.gameId;
-		socket.join(this.gameId);
-		this.socketIds.push(socket.id);
-		this.sockets.push(socket);
-		socket.on("disconnecting", this.onPlayerDisconnecting.bind(this, socket));
-		this.sendPlayerList();
+		if (this.sockets.length < this.rules.players.max) {
+			name = name.substring(0, 12);
+			socket.name = name;
+			socket.game = this.gameId;
+			socket.join(this.gameId);
+			this.socketIds.push(socket.id);
+			this.sockets.push(socket);
+			socket.on("disconnecting", this.onPlayerDisconnecting.bind(this, socket));
+			this.sendPlayerList();
+			return true;
+		}
+		return false;
 	}
 
 	removePlayer(socketId) {
@@ -70,8 +74,13 @@ module.exports = class Game {
 	}
 
 	startGame(socket) {
-		if (this.sockets.length !== 2) {
-			return { message: "Incorrect amount of players" };
+		let players = this.sockets.length;
+		if (players < this.rules.players.min || players > this.rules.players.max) {
+			let required =
+				this.rules.players.min === this.rules.players.max
+					? this.rules.players.max
+					: this.rules.players.min + "-" + this.rules.players.max;
+			return { message: "Game requires " + required + " players" };
 		}
 		if (this.sockets[0] !== socket) {
 			return { message: "Room creator must start game" };

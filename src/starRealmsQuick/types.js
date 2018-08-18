@@ -137,6 +137,7 @@ class Base extends Card {
 		}
 	}
 	onDestroy() {}
+	onAcquire() {}
 
 	static getType() {
 		return "base";

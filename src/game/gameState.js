@@ -18,13 +18,15 @@ module.exports = class GameState {
 		this.deciding = null;
 		this._choices = null;
 
-		this.players = GameState.createPlayers(playerIds, rules.startingDeck);
+		this.players = GameState.createPlayers(playerIds, rules.startingDeck, rules.startingHand);
 		this.shop = new Shop(rules.cards);
 		this.phase = rules.phases[0];
 		this._running = true;
 		this.winner = null;
 		this.playing = this._playerIds[0];
 		this.turn = 0;
+
+		this.endAction = { action: "end", type: "player", target: "deck" };
 
 		this.loadRules();
 		this.firstDraw();
@@ -84,9 +86,13 @@ module.exports = class GameState {
 		// TODO: allow easy change to counter resets and drawing
 		switch (this.phase) {
 			case "draw":
-				this.getPlaying().draw(
-					this._rules.drawAmount(this.turn, this._playerIds.indexOf(this.playing))
-				);
+				let draw = 0;
+				if (typeof this._rules.drawAmount === "function") {
+					draw = this._rules.drawAmount(this.turn, this._playerIds.indexOf(this.playing));
+				} else {
+					draw = this._rules.drawAmount;
+				}
+				this.getPlaying().draw(draw);
 				break;
 			case "discard":
 				this.getPlaying().setCounter("trade", 0);
@@ -176,7 +182,8 @@ module.exports = class GameState {
 	}
 
 	makeActions() {
-		let actions = [{ action: "end", type: "player", target: "deck" }];
+		let end = this._rules.endPhases.indexOf(this.phase) !== -1;
+		let actions = end ? [this.endAction] : [];
 		this._makes[this.phase].forEach(make => {
 			actions.push(...make(this));
 		});
@@ -202,7 +209,13 @@ module.exports = class GameState {
 
 	firstDraw() {
 		this._playerIds.forEach((playerId, index) => {
-			this.players[playerId].draw(this._rules.drawAmount(this.turn, index));
+			let draw = 0;
+			if (typeof this._rules.drawAmount === "function") {
+				draw = this._rules.drawAmount(this.turn, index);
+			} else {
+				draw = this._rules.drawAmount;
+			}
+			this.players[playerId].draw(draw);
 		});
 		this.turn = 1;
 	}
@@ -253,10 +266,10 @@ module.exports = class GameState {
 	 * @param deck
 	 * @returns {{}}
 	 */
-	static createPlayers(playerIds, createDeck) {
+	static createPlayers(playerIds, createDeck, createHand) {
 		let players = {};
 		playerIds.forEach(playerId => {
-			players[playerId] = new Player(createDeck());
+			players[playerId] = new Player(createDeck(), createHand());
 		});
 		return players;
 	}

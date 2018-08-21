@@ -1,0 +1,57 @@
+{
+  "counters": {
+    "display": [
+      "influence",
+      "actionPoints"
+    ],
+    "x": 36,
+    "y": 22,
+    "width": 15,
+    "height": 11
+  },
+  "piles": {
+    "civilians": {
+      "x": -40,
+      "y": 0
+    }
+  },
+  "rows": {
+    "actionRow": {
+      "row": {
+        "x": 0,
+        "y": 0
+      },
+      "deck": {
+        "x": 40,
+        "y": 0,
+        "target": "actionDeck"
+      }
+    }
+  },
+  "textures": {
+    "cards": {
+      "small": {
+        "back": "../starRealms/cards/small/back.png",
+        "empty": "../starRealms/cards/small/empty.png",
+        "undef": "../starRealms/cards/small/undef.png",
+        "commanderbernard": "../armyForce/cards/small/bernard.png"
+      },
+      "large": {
+      }
+    },
+    "actions": {
+      "undef": "../starRealms/actions/undef.png",
+      "play": "../starRealms/actions/play.png",
+      "end": "../starRealms/actions/end.png",
+      "buy": "../starRealms/actions/buy.png",
+      "primary": "../starRealms/actions/primary.png"
+    },
+    "displays": {
+      "yourturn": "../starRealms/displays/yourturn.png",
+      "oppturn": "../starRealms/displays/oppturn.png",
+      "youwon": "../starRealms/displays/youwon.png",
+      "youlost": "../starRealms/displays/youlost.png",
+      "wait": "../starRealms/displays/wait.png"
+    }
+  }
+}

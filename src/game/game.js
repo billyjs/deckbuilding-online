@@ -95,14 +95,12 @@ module.exports = class Game {
 	}
 
 	requestAction() {
-		this.sendGameState();
-
 		// gameState.decision = true;
 		// gameState._decisionCallback = callback;
 		// gameState._choices = _choices;
 		// this.actions = this.rules.makeActions(this.gameState);
 		this.actions = this.gameState.makeActions();
-
+		this.sendGameState();
 		switch (this.actions.length) {
 			case 0:
 				break;

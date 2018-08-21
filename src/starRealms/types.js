@@ -71,6 +71,7 @@ class Ship extends Card {
 			this.abilities.ally.available = true;
 		}
 	}
+	onAcquire() {}
 
 	static getType() {
 		return "ship";

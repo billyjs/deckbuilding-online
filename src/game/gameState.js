@@ -95,10 +95,17 @@ module.exports = class GameState {
 				this.getPlaying().draw(draw);
 				break;
 			case "discard":
-				this.getPlaying().setCounter("trade", 0);
-				this.getPlaying().setCounter("combat", 0);
-				this.getPlaying().setCounter("blobs", 0);
-				this.getPlaying().setCounter("buyTopDeck", 0);
+				this._rules.player.counters.forEach(counter => {
+					let resetValue = counter.reset;
+					if (resetValue !== undefined) {
+						this.getPlaying().setCounter(counter.name, resetValue);
+					}
+				});
+
+				// this.getPlaying().setCounter("trade", 0);
+				// this.getPlaying().setCounter("combat", 0);
+				// this.getPlaying().setCounter("blobs", 0);
+				// this.getPlaying().setCounter("buyTopDeck", 0);
 				break;
 			default:
 				break;
@@ -106,17 +113,34 @@ module.exports = class GameState {
 	}
 
 	onTurnStart() {
-		// TODO: allow easy change to end condition
-		let alive = [];
-		this._playerIds.forEach(playerId => {
-			if (this.players[playerId].get("authority") > 0) {
-				alive.push(playerId);
+		if (this._rules.end && this._rules.end.turnStart) {
+			let winner = this._rules.end.func(this);
+			if (winner) {
+				this._running = false;
+				this.winner = winner;
 			}
-		});
-		let winner = alive.length === 1 ? alive[0] : null;
-		if (winner) {
-			this._running = false;
-			this.winner = winner;
+		}
+		// // TODO: allow easy change to end condition
+		// let alive = [];
+		// this._playerIds.forEach(playerId => {
+		// 	if (this.players[playerId].get("authority") > 0) {
+		// 		alive.push(playerId);
+		// 	}
+		// });
+		// let winner = alive.length === 1 ? alive[0] : null;
+		// if (winner) {
+		// 	this._running = false;
+		// 	this.winner = winner;
+		// }
+	}
+
+	onRoundStart() {
+		if (this._rules.end && this._rules.end.roundStart) {
+			let winner = this._rules.end.func(this);
+			if (winner) {
+				this._running = false;
+				this.winner = winner;
+			}
 		}
 	}
 
@@ -151,7 +175,7 @@ module.exports = class GameState {
 		this.turn += 1;
 		if (index >= this._playerIds.length) {
 			index = 0;
-			// ROUND END
+			this.onRoundStart();
 		}
 		this.playing = this._playerIds[index];
 		this.onTurnStart();
@@ -159,6 +183,12 @@ module.exports = class GameState {
 
 	getPlaying() {
 		return this.players[this.playing];
+	}
+
+	getNotPlaying() {
+		return this._playerIds
+			.filter(playerId => playerId !== this.playing)
+			.map(playerId => this.players[playerId]);
 	}
 
 	applyAction(action) {

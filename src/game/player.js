@@ -47,6 +47,7 @@ module.exports = class Player {
 		});
 		this.inPlay.push(...this.hand.splice(index, 1));
 		card.onPlay(gameState);
+		return card;
 	}
 
 	destroy(gameState, index) {

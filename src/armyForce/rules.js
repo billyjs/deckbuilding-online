@@ -42,7 +42,7 @@ function makePlayingActions(gameState) {
 	gameState.getPlaying().hand.forEach((card, index) => {
 		if (
 			card.types.has("personnel") ||
-			(card.types.has("action") && gameState.getPlaying().get("actionPoints") > 0)
+			(card.types.has("action") && gameState.getPlaying().get("actions") > 0)
 		) {
 			actions.push({
 				action: "play",
@@ -56,13 +56,56 @@ function makePlayingActions(gameState) {
 	return actions;
 }
 
+function makeRecruitmentActions(gameState) {
+	let actions = [];
+	let influence = gameState.getPlaying().get("influence") + gameState.getPlaying().get("tempInfluence");
+	let recruitment = gameState.getPlaying().get("recruitment");
+	Object.keys(gameState.shop.piles).forEach(key => {
+		let pile = gameState.shop.piles[key];
+		if (pile.amount > 0 && cards._costEnum[pile.cardName] <= influence && recruitment > 0) {
+			actions.push({ action: "recruit", type: "piles", target: key });
+		}
+	});
+	return actions;
+}
+
+function makeBuyActions(gameState) {
+	let actions = [];
+	let influence = gameState.getPlaying().get("influence");
+	let tempInfluence = gameState.getPlaying().get("tempInfluence");
+	if (tempInfluence < 0) {
+		influence += tempInfluence;
+	}
+	gameState.shop.rows.actionRow.row.forEach((card, index) => {
+		if (cards._costEnum[card] <= influence) {
+			actions.push({ action: "buy", type: "rows", target: "actionRow", index });
+		}
+	});
+	return actions;
+}
+
 function actionPlay(gameState, action) {
-	gameState.getPlaying().play(gameState, action.index);
+	let card = gameState.getPlaying().play(gameState, action.index);
+	if (card.types.has("action")) {
+		gameState.getPlaying().updateCounter("actions", -1);
+	}
 }
 
 function actionChoose(gameState, action) {
 	gameState.getPlaying().play(gameState, action.index);
 	gameState.getPlaying().hand = [];
+}
+
+function actionRecruit(gameState, action) {
+	let card = gameState.shop.fromPile(action.target, gameState);
+	gameState.getPlaying().toDiscard(card);
+	gameState.getPlaying().updateCounter("recruitment", -1);
+}
+
+function actionBuy(gameState, action) {
+	let card = gameState.shop.fromRow(action.target, action.index, gameState);
+	gameState.getPlaying().toDiscard(card);
+	gameState.getPlaying().updateCounter("influence", -card.cost);
 }
 
 function drawAmount(turn, index) {
@@ -75,18 +118,58 @@ function drawAmount(turn, index) {
 
 function createStartingDeck() {
 	let deck = [];
-	for (let i = 0; i < 10; i++) {
+	for (let i = 0; i < 8; i++) {
 		deck.push(new cards.Civilian());
 	}
+	deck.push(new cards.ImpressiveAction());
+	deck.push(new cards.InspiringSpeech());
 	return deck;
 }
 
 function createStartingHand() {
-	let hand = [];
-	for (let i = 0; i < 5; i++) {
-		hand.push(new cards.CommanderBernard());
+	return [
+		new cards.CommanderBernard(),
+		new cards.CommanderHopkins(),
+		new cards.CommanderHolt(),
+		new cards.CommanderReily()
+	];
+}
+
+function endCondition(gameState) {
+	let influenceMet = false;
+	let leader = null;
+	let leaderArmyPower = 0;
+	let secondArmyPower = 0;
+	gameState._playerIds.forEach(playerId => {
+		if (gameState.players[playerId].get("influence") >= 25) {
+			influenceMet = true;
+		}
+		if (!leader || gameState.players[playerId].get("armyPower") > leaderArmyPower) {
+			leader = playerId;
+			secondArmyPower = leaderArmyPower;
+			leaderArmyPower = gameState.players[playerId].get("armyPower");
+		}
+	});
+	if (influenceMet || (leaderArmyPower >= 50 && leaderArmyPower >= secondArmyPower * 2)) {
+		return leader;
 	}
-	return hand;
+	return null;
+}
+
+function createActionDeck() {
+	let deck = [];
+	for (let i = 0; i < 3; i++) {
+		deck.push("ImpressiveAction");
+		deck.push("InspiringSpeech");
+		deck.push("QuickPlay");
+		deck.push("Fire");
+	}
+	for (let i = 0; i < 2; i++) {
+		deck.push("DoubleDown");
+		deck.push("Prestige");
+		deck.push("Raid");
+	}
+	return deck;
 }
 
 module.exports = {
@@ -99,49 +182,71 @@ module.exports = {
 	endPhases: ["action", "recruitment", "discard", "draw"], // phases where an end action is automatically added
 	startingDeck: createStartingDeck,
 	startingHand: createStartingHand,
+	end: {
+		turnStart: true,
+		roundStart: false,
+		func: endCondition
+	},
 	shop: {
 		rows: [
 			{
 				name: "actionRow",
-				deck: Array(10).fill("ImpressiveAction"),
+				deck: createActionDeck(),
 				shown: 3
-			},
-			{
-				name: "commanders",
-				deck: Array(10).fill("CommanderBernard"),
-				shown: 10 // TODO: make special case to show all cards
 			}
+			// {
+			// 	name: "commanders",
+			// 	deck: Array(10).fill("CommanderBernard"),
+			// 	shown: 10 // TODO: make special case to show all cards
+			// }
 		],
 		piles: [
 			{
 				name: "civilians",
 				cardName: "Civilian",
 				amount: 10
+			},
+			{
+				name: "soldiers",
+				cardName: "Soldier",
+				amount: 10
+			},
+			{
+				name: "hitmen",
+				cardName: "Hitman",
+				amount: 10
+			},
+			{
+				name: "recruiters",
+				cardName: "Recruiter",
+				amount: 10
+			},
+			{
+				name: "snipers",
+				cardName: "Sniper",
+				amount: 10
+			},
+			{
+				name: "spies",
+				cardName: "Spy",
+				amount: 10
+			},
+			{
+				name: "traitors",
+				cardName: "Traitor",
+				amount: 10
 			}
 		]
 	},
 	player: {
 		counters: [
-			{
-				name: "armyPower",
-				value: 0
-			},
-			{
-				name: "influence",
-				value: 0
-			},
-			{
-				name: "tempInfluence",
-				value: 0
-			},
-			{
-				name: "recruitmentPoints",
-				value: 1
-			},
-			{
-				name: "actionPoints",
-				value: 1
-			}
+			{ name: "armyPower", value: 0 },
+			{ name: "influence", value: 0 },
+			{ name: "tempInfluence", value: 0, reset: 0 },
+			{ name: "recruitment", value: 1, reset: 1 },
+			{ name: "actions", value: 1, reset: 1 },
+			{ name: "soldier", value: 0 },
+			{ name: "traitor", value: 0 }
 		]
 	},
 	game: {
@@ -153,19 +258,15 @@ module.exports = {
 			{
 				phase: "action",
 				func: makePlayingActions
+			},
+			{
+				phase: "recruitment",
+				func: makeRecruitmentActions
+			},
+			{
+				phase: "recruitment",
+				func: makeBuyActions
 			}
-			// {
-			// 	phase: "action",
-			// 	func: makeAbilityActions
-			// },
-			// {
-			// 	phase: "recruitment",
-			// 	func: makeCombatActions
-			// },
-			// {
-			// 	phase: "recruitment",
-			// 	func: makeBuyActions
-			// }
 		],
 		applications: [
 			{
@@ -175,15 +276,15 @@ module.exports = {
 			{
 				action: "choose",
 				func: actionChoose
+			},
+			{
+				action: "recruit",
+				func: actionRecruit
+			},
+			{
+				action: "buy",
+				func: actionBuy
 			}
-			// {
-			// 	action: "ability",
-			// 	func: actionAbility
-			// },
-			// {
-			// 	action: "buy",
-			// 	func: actionBuy
-			// }
 		]
 	},
 

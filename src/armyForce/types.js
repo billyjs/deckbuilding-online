@@ -1,17 +1,62 @@
 const Card = require("../game/card");
 
+function calcArmyPower(player, thisCard) {
+    let allCards = [...player.deck, ...player.discard, ...player.hand, ...player.inPlay, thisCard || {}];
+    let civilian = 0;
+    let soldier = 0;
+    let sniper = 0;
+    let hitman = 0;
+    let recruiter = 0;
+    let spy = 0;
+    let traitor = 0;
+    let reily = 0;
+    allCards.forEach(card => {
+        switch (card.name) {
+            case "Civilian":
+                civilian++;
+                break;
+            case "Soldier":
+                soldier++;
+                break;
+            case "Sniper":
+                sniper++;
+                break;
+            case "Hitman":
+                hitman++;
+                break;
+            case "Recruiter":
+                recruiter++;
+                break;
+            case "Spy":
+                spy++;
+                break;
+            case "Traitor":
+                traitor++;
+                break;
+            case "CommanderReily":
+                reily++;
+                break;
+            default:
+                break;
+        }
+    });
+    console.log(reily, traitor, soldier, spy, recruiter, hitman, sniper);
+    return (20 * reily) + (-1 * traitor) + (Math.pow(soldier, 2)) + (6 * spy) + (4 * recruiter) + (4 * hitman) + (4 * sniper) + (Math.min(sniper, civilian));
+}
+
 class Commander extends Card {
 	constructor() {
 		super();
 		this.types.add("commander");
 	}
-	onPlay() {
-		// cannot be played
-	}
-	onPhaseStart(gameState) {
+	onPlay() {}
+	onPhaseStart(gameState, location) {
 		switch (gameState.phase) {
 			case "commander":
-				this.onActivate(gameState, { ability: "primary" });
+				if (location === "inPlay") {
+					this.increaseInfluence(gameState);
+					this.onActivate(gameState, { ability: "primary" });
+				}
 				break;
 			case "discard":
 				this.resetCounters();
@@ -19,6 +64,9 @@ class Commander extends Card {
 			default:
 				break;
 		}
+	}
+	increaseInfluence(gameState) {
+		gameState.getPlaying().updateCounter("influence", 2);
 	}
 	onOtherPlay() {
 		// TODO
@@ -56,6 +104,7 @@ class Action extends Card {
 				break;
 		}
 	}
+	onAcquire() {}
 	resetCounters() {
 		if (this.abilities.primary) {
 			this.abilities.primary.available = true;
@@ -91,6 +140,9 @@ class Personnel extends Card {
 				break;
 		}
 	}
+	onAcquire(gameState) {
+		gameState.getPlaying().setCounter("armyPower", calcArmyPower(gameState.getPlaying(), this));
+	}
 	resetCounters() {
 		if (this.abilities.primary) {
 			this.abilities.primary.available = true;
@@ -105,5 +157,6 @@ class Personnel extends Card {
 module.exports = {
 	Commander,
 	Personnel,
-	Action
+	Action,
+	calcArmyPower
 };

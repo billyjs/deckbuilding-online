@@ -1,0 +1,105 @@
+{
+  "counters": {
+    "display": [
+      {
+        "name": "Influence",
+        "main": ["influence"],
+        "additional": ["tempInfluence"]
+      },
+      "armyPower",
+      "actions",
+      "recruitment"
+    ],
+    "x": 36,
+    "y": 22,
+    "width": 15,
+    "height": 11
+  },
+  "piles": {
+    "traitors": {
+      "x": -40,
+      "y": 0
+    },
+    "civilians": {
+      "x": -32,
+      "y": 0
+    },
+    "soldiers": {
+      "x": -24,
+      "y": 0
+    },
+    "snipers": {
+      "x": -16,
+      "y": 0
+    },
+    "recruiters": {
+      "x": -8,
+      "y": 0
+    },
+    "hitmen": {
+      "x": 0,
+      "y": 0
+    },
+    "spies": {
+      "x": 8,
+      "y": 0
+    }
+  },
+  "rows": {
+    "actionRow": {
+      "row": {
+        "x": 24,
+        "y": 0
+      },
+      "deck": {
+        "x": 40,
+        "y": 0,
+        "target": "actionDeck"
+      }
+    }
+  },
+  "textures": {
+    "cards": {
+      "small": {
+        "back": "../starRealms/cards/small/back.png",
+        "empty": "../starRealms/cards/small/empty.png",
+        "undef": "../starRealms/cards/small/undef.png",
+        "commanderbernard": "../armyForce/cards/small/bernard.png",
+        "commanderhopkins": "../armyForce/cards/small/hopkins.png",
+        "commanderholt": "../armyForce/cards/small/holt.png",
+        "commanderreily": "../armyForce/cards/small/reily.png",
+
+        "civilian": "../armyForce/cards/small/civilian.png",
+        "soldier": "../armyForce/cards/small/soldier.png",
+        "hitman": "../armyForce/cards/small/hitman.png",
+        "recruiter": "../armyForce/cards/small/recruiter.png",
+        "sniper": "../armyForce/cards/small/sniper.png",
+        "spy": "../armyForce/cards/small/spy.png",
+        "traitor": "../armyForce/cards/small/traitor.png",
+
+        "impressiveaction": "../armyForce/cards/small/impressiveAction.png",
+        "doubledown": "../armyForce/cards/small/doubleDown.png",
+        "fire": "../armyForce/cards/small/fire.png",
+        "inspiringspeech": "../armyForce/cards/small/inspiringSpeech.png",
+        "prestige": "../armyForce/cards/small/prestige.png",
+        "quickplay": "../armyForce/cards/small/quickplay.png",
+        "raid": "../armyForce/cards/small/raid.png"
+      },
+      "large": {}
+    },
+    "actions": {
+      "undef": "../starRealms/actions/undef.png",
+      "play": "../starRealms/actions/play.png",
+      "end": "../starRealms/actions/end.png",
+      "buy": "../starRealms/actions/buy.png",
+      "primary": "../starRealms/actions/primary.png"
+    },
+    "displays": {
+      "yourturn": "../starRealms/displays/yourturn.png",
+      "oppturn": "../starRealms/displays/oppturn.png",
+      "youwon": "../starRealms/displays/youwon.png",
+      "youlost": "../starRealms/displays/youlost.png",
+      "wait": "../starRealms/displays/wait.png"
+    }
+  }
+}

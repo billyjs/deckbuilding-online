@@ -18,13 +18,15 @@ module.exports = class GameState {
 		this.deciding = null;
 		this._choices = null;
 
-		this.players = GameState.createPlayers(playerIds, rules.startingDeck);
+		this.players = GameState.createPlayers(playerIds, rules.startingDeck, rules.startingHand);
 		this.shop = new Shop(rules.cards);
 		this.phase = rules.phases[0];
 		this._running = true;
 		this.winner = null;
 		this.playing = this._playerIds[0];
 		this.turn = 0;
+
+		this.endAction = { action: "end", type: "player", target: "deck" };
 
 		this.loadRules();
 		this.firstDraw();
@@ -84,15 +86,26 @@ module.exports = class GameState {
 		// TODO: allow easy change to counter resets and drawing
 		switch (this.phase) {
 			case "draw":
-				this.getPlaying().draw(
-					this._rules.drawAmount(this.turn, this._playerIds.indexOf(this.playing))
-				);
+				let draw = 0;
+				if (typeof this._rules.drawAmount === "function") {
+					draw = this._rules.drawAmount(this.turn, this._playerIds.indexOf(this.playing));
+				} else {
+					draw = this._rules.drawAmount;
+				}
+				this.getPlaying().draw(draw);
 				break;
 			case "discard":
-				this.getPlaying().setCounter("trade", 0);
-				this.getPlaying().setCounter("combat", 0);
-				this.getPlaying().setCounter("blobs", 0);
-				this.getPlaying().setCounter("buyTopDeck", 0);
+				this._rules.player.counters.forEach(counter => {
+					let resetValue = counter.reset;
+					if (resetValue !== undefined) {
+						this.getPlaying().setCounter(counter.name, resetValue);
+					}
+				});
+
+				// this.getPlaying().setCounter("trade", 0);
+				// this.getPlaying().setCounter("combat", 0);
+				// this.getPlaying().setCounter("blobs", 0);
+				// this.getPlaying().setCounter("buyTopDeck", 0);
 				break;
 			default:
 				break;
@@ -100,17 +113,34 @@ module.exports = class GameState {
 	}
 
 	onTurnStart() {
-		// TODO: allow easy change to end condition
-		let alive = [];
-		this._playerIds.forEach(playerId => {
-			if (this.players[playerId].get("authority") > 0) {
-				alive.push(playerId);
+		if (this._rules.end && this._rules.end.turnStart) {
+			let winner = this._rules.end.func(this);
+			if (winner) {
+				this._running = false;
+				this.winner = winner;
 			}
-		});
-		let winner = alive.length === 1 ? alive[0] : null;
-		if (winner) {
-			this._running = false;
-			this.winner = winner;
+		}
+		// // TODO: allow easy change to end condition
+		// let alive = [];
+		// this._playerIds.forEach(playerId => {
+		// 	if (this.players[playerId].get("authority") > 0) {
+		// 		alive.push(playerId);
+		// 	}
+		// });
+		// let winner = alive.length === 1 ? alive[0] : null;
+		// if (winner) {
+		// 	this._running = false;
+		// 	this.winner = winner;
+		// }
+	}
+
+	onRoundStart() {
+		if (this._rules.end && this._rules.end.roundStart) {
+			let winner = this._rules.end.func(this);
+			if (winner) {
+				this._running = false;
+				this.winner = winner;
+			}
 		}
 	}
 
@@ -145,7 +175,7 @@ module.exports = class GameState {
 		this.turn += 1;
 		if (index >= this._playerIds.length) {
 			index = 0;
-			// ROUND END
+			this.onRoundStart();
 		}
 		this.playing = this._playerIds[index];
 		this.onTurnStart();
@@ -153,6 +183,12 @@ module.exports = class GameState {
 
 	getPlaying() {
 		return this.players[this.playing];
+	}
+
+	getNotPlaying() {
+		return this._playerIds
+			.filter(playerId => playerId !== this.playing)
+			.map(playerId => this.players[playerId]);
 	}
 
 	applyAction(action) {
@@ -176,7 +212,8 @@ module.exports = class GameState {
 	}
 
 	makeActions() {
-		let actions = [{ action: "end", type: "player", target: "deck" }];
+		let end = this._rules.endPhases.indexOf(this.phase) !== -1;
+		let actions = end ? [this.endAction] : [];
 		this._makes[this.phase].forEach(make => {
 			actions.push(...make(this));
 		});
@@ -202,7 +239,13 @@ module.exports = class GameState {
 
 	firstDraw() {
 		this._playerIds.forEach((playerId, index) => {
-			this.players[playerId].draw(this._rules.drawAmount(this.turn, index));
+			let draw = 0;
+			if (typeof this._rules.drawAmount === "function") {
+				draw = this._rules.drawAmount(this.turn, index);
+			} else {
+				draw = this._rules.drawAmount;
+			}
+			this.players[playerId].draw(draw);
 		});
 		this.turn = 1;
 	}
@@ -253,10 +296,10 @@ module.exports = class GameState {
 	 * @param deck
 	 * @returns {{}}
 	 */
-	static createPlayers(playerIds, createDeck) {
+	static createPlayers(playerIds, createDeck, createHand) {
 		let players = {};
 		playerIds.forEach(playerId => {
-			players[playerId] = new Player(createDeck());
+			players[playerId] = new Player(createDeck(), createHand());
 		});
 		return players;
 	}

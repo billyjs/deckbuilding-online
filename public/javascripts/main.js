@@ -556,7 +556,7 @@ function highlightMeshes() {
 	Object.keys(meshes).forEach(key => {
 		Object.keys(meshes[key]).forEach(key2 => {
 			if (meshes[key][key2] && !Array.isArray(meshes[key][key2])) {
-				if (meshes[key][key2].actions.length > 0) {
+				if (meshes[key][key2].actions && meshes[key][key2].actions.length > 0) {
 					// make highlights
 					let material = new THREE.MeshBasicMaterial({
 						color: 0xff7700,
@@ -573,7 +573,7 @@ function highlightMeshes() {
 				}
 			} else if (meshes[key][key2]) {
 				meshes[key][key2].forEach(mesh => {
-					if (mesh.actions.length > 0) {
+					if (mesh.actions && mesh.actions.length > 0) {
 						// make highlights
 						let material = new THREE.MeshBasicMaterial({
 							color: 0xff7700,

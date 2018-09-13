@@ -1,6 +1,6 @@
 const socket = io();
 // TODO: move to a config file
-const games = ["starRealms", "starRealmsQuick"];
+const games = ["starRealms", "starRealmsQuick", "armyForce"];
 
 let gameId = null;
 let gameName = null;
@@ -159,12 +159,30 @@ socket.on("gameState", gs => {
 
 		let text = "";
 		layout.counters.display.forEach(counter => {
-			text +=
-				"<p>" +
-				counter.replace(/^(\w)/g, c => c.toUpperCase()) +
-				": " +
-				player.counters[counter] +
-				"</p>";
+			if (typeof counter === "string") {
+                text +=
+					"<p>" +
+                    counter.replace(/^(\w)/g, c => c.toUpperCase()) +
+                    ": " +
+                    player.counters[counter] +
+                    "</p>";
+			} else {
+				let reducer = (total, current) => total + player.counters[current];
+				text +=
+					"<p>" +
+					counter.name +
+					": " +
+					counter.main.reduce(reducer, 0);
+				if (counter.additional) {
+					let additional = counter.additional.reduce(reducer, 0);
+					if (additional > 0) {
+						text += " +" + additional;
+					} else if (additional < 0) {
+						text += " " + additional;
+					}
+				}
+			}
+
 		});
 
 		displayLabel(
@@ -218,24 +236,26 @@ socket.on("gameState", gs => {
 
 	// display rows with their set x y positions
 	Object.keys(gs.shop.rows).forEach(row => {
-		displayRow(
-			gs.shop.rows[row].row.map(name => {
-				return { name: name };
-			}),
-			layout.rows[row].row.x,
-			layout.rows[row].row.y,
-			layout.rows[row].row.target || row
-		);
-		if (layout.rows[row].deck) {
-			displayPile(
-				{
-					back: true,
-					count: gs.shop.rows[row].deck
-				},
-				layout.rows[row].deck.x,
-				layout.rows[row].deck.y,
-				layout.rows[row].deck.target || row
+		if (layout.rows[row]) {
+			displayRow(
+				gs.shop.rows[row].row.map(name => {
+					return { name: name };
+				}),
+				layout.rows[row].row.x,
+				layout.rows[row].row.y,
+				layout.rows[row].row.target || row
 			);
+			if (layout.rows[row].deck) {
+				displayPile(
+					{
+						back: true,
+						count: gs.shop.rows[row].deck
+					},
+					layout.rows[row].deck.x,
+					layout.rows[row].deck.y,
+					layout.rows[row].deck.target || row
+				);
+			}
 		}
 	});
 	highlightMeshes();
@@ -254,6 +274,9 @@ socket.on("requestAction", actions => {
 		let mesh = meshes[action.type][action.target];
 		if (action.index !== undefined) {
 			mesh = mesh[action.index];
+		}
+		if(!mesh) {
+			console.log("No mesh at: " + action.type + " " + action.target);
 		}
 		mesh.actions.push({
 			...action,

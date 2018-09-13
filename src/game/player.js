@@ -1,9 +1,9 @@
 const helper = require("../helper");
 
 module.exports = class Player {
-	constructor(deck) {
+	constructor(deck, hand) {
 		this.deck = helper.shuffleCopy(deck);
-		this.hand = [];
+		this.hand = hand || [];
 		this.discard = [];
 		this.inPlay = [];
 		this.counters = {};
@@ -47,6 +47,7 @@ module.exports = class Player {
 		});
 		this.inPlay.push(...this.hand.splice(index, 1));
 		card.onPlay(gameState);
+		return card;
 	}
 
 	destroy(gameState, index) {

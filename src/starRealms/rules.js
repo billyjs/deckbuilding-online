@@ -302,6 +302,11 @@ function actionBuyTopDeck(gameState, action) {
 	}
 }
 
+function endCondition(gameState) {
+	let alive = gameState._playerIds.filter(playerId => gameState.players[playerId].get("authority") > 0);
+	return (alive.length === 1 ? alive[0] : null);
+}
+
 module.exports = {
 	cards: cards,
 	players: {
@@ -309,7 +314,14 @@ module.exports = {
 		max: 2
 	},
 	phases: ["play", "discard", "draw"],
+	endPhases: ["play", "discard", "draw"],
 	startingDeck: createStartingDeck,
+	startingHand: () => [],
+	end: {
+		turnStart: true,
+		roundStart: false,
+		func: endCondition
+	},
 	shop: {
 		rows: [
 			{
@@ -328,26 +340,11 @@ module.exports = {
 	},
 	player: {
 		counters: [
-			{
-				name: "trade",
-				value: 0
-			},
-			{
-				name: "combat",
-				value: 0
-			},
-			{
-				name: "authority",
-				value: 50
-			},
-			{
-				name: "blobs",
-				value: 0
-			},
-			{
-				name: "buyTopDeck",
-				value: 0
-			}
+			{ name: "trade", value: 0, reset: 0 },
+			{ name: "combat", value: 0, reset: 0 },
+			{ name: "authority", value: 50 },
+			{ name: "blobs", value: 0, reset: 0 },
+			{ name: "buyTopDeck", value: 0, reset: 0 }
 		]
 	},
 	game: {

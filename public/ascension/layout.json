@@ -1,0 +1,85 @@
+{
+  "counters": {
+    "display": [
+      "honour",
+      "runes",
+      "power",
+      "life",
+      "death"
+    ],
+    "x": 36,
+    "y": 22,
+    "width": 15,
+    "height": 11
+  },
+  "piles": {
+    "mystics": {
+      "x": -40,
+      "y": 0
+    },
+    "heavyInfantries": {
+      "x": -32,
+      "y": 0
+    },
+    "cultist": {
+      "x": -24,
+      "y": 0
+    },
+    "templeOfLife": {
+      "x": 24,
+      "y": 0
+    },
+    "templeOfDeath": {
+      "x": 32,
+      "y": 0
+    },
+    "templeOfImmortality": {
+      "x": 40,
+      "y": 0
+    }
+  },
+  "rows": {
+    "centreRow": {
+      "row": {
+        "x": 0,
+        "y": 0
+      },
+      "deck": {
+        "x": 40,
+        "y": 40,
+        "target": "centreDeck"
+      }
+    }
+  },
+  "textures": {
+    "cards": {
+      "small": {
+        "back": "../starRealms/cards/small/back.png",
+        "empty": "../starRealms/cards/small/empty.png",
+        "undef": "../starRealms/cards/small/undef.png",
+        "apprentice": "../ascension/cards/small/apprentice.png",
+        "militia": "../ascension/cards/small/militia.png",
+        "mystic": "../ascension/cards/small/mystic.png",
+        "heavyinfantry": "../ascension/cards/small/heavyInfantry.png",
+        "cultist": "../ascension/cards/small/cultist.png",
+        "templeoflife": "../ascension/cards/small/templeOfLife.png",
+        "templeofdeath": "../ascension/cards/small/templeOfDeath.png",
+        "templeofimmortality": "../ascension/cards/small/templeOfImmortality.png"
+      }
+    },
+    "actions": {
+      "undef": "../starRealms/actions/undef.png",
+      "play": "../starRealms/actions/play.png",
+      "end": "../starRealms/actions/end.png",
+      "buy": "../starRealms/actions/buy.png",
+      "primary": "../starRealms/actions/primary.png"
+    },
+    "displays": {
+      "yourturn": "../starRealms/displays/yourturn.png",
+      "oppturn": "../starRealms/displays/oppturn.png",
+      "youwon": "../starRealms/displays/youwon.png",
+      "youlost": "../starRealms/displays/youlost.png",
+      "wait": "../starRealms/displays/wait.png"
+    }
+  }
+}

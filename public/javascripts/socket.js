@@ -1,6 +1,6 @@
 const socket = io();
 // TODO: move to a config file
-const games = ["starRealms", "starRealmsQuick", "armyForce"];
+const games = ["starRealms", "starRealmsQuick", "armyForce", "ascension"];
 
 let gameId = null;
 let gameName = null;

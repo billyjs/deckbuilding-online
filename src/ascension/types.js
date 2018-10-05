@@ -103,6 +103,7 @@ class Construct extends Card {
 	checkUnite(gameState) {
 		if (this.abilities.unite) {
 			let unite = gameState.getPlaying().get("unite");
+			console.log("UNITE: ", unite);
 			this.abilities.unite.available = unite >= 1;
 		}
 	}

@@ -41,14 +41,15 @@ module.exports = class Player {
 	}
 
 	play(gameState, index) {
-		let card = this.hand[index];
-		card.onPlay(gameState); // testing onPlay before onOtherPlay
-		this.inPlay.forEach(inPlay => {
-			inPlay.onOtherPlay(gameState, card);
-		});
+		let played = this.hand[index];
+		let inPlay = this.inPlay.slice();
 		this.inPlay.push(...this.hand.splice(index, 1));
+		played.onPlay(gameState); // testing onPlay before onOtherPlay
+		inPlay.forEach(card => {
+			card.onOtherPlay(gameState, played);
+		});
 		// card.onPlay(gameState);
-		return card;
+		return played;
 	}
 
 	playCard(gameState, card) {

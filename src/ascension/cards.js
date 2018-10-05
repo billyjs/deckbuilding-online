@@ -140,7 +140,12 @@ function removeTempleConstructs(gameState) {
 
 function discardTopDeck(gameState) {
 	let card = gameState.getPlaying().deck.shift();
-	gameState.getPlaying().toDiscard(card);
+	if (!card) {
+		gameState.getPlaying().refreshDeck();
+		discardTopDeck(gameState);
+	} else {
+		gameState.getPlaying().toDiscard(card);
+	}
 }
 
 function discardDeck(gameState) {
@@ -189,6 +194,7 @@ const cards = {
 		primaryAbility(gameState) {
 			gameState.getPlaying().updateCounter("power", 1);
 			// TODO: remove keystones
+            gameState.getPlaying().updateCounter("runes", 5);
 			gameState.getPlaying().updateCounter("life", 1);
 			gameState.getPlaying().updateCounter("death", 1);
 		}
@@ -273,7 +279,7 @@ const cards = {
 			this.addAbility("reward", this.rewardAbility);
 		}
 		rewardAbility(gameState) {
-			gameState.getPlaying().updateCounter("honour", 1);
+			gameState.getPlaying().updateCounter("honour", 3);
 			gameState.getPlaying().updateCounter("life", 1);
 		}
 	},
@@ -285,7 +291,7 @@ const cards = {
 			this.addAbility("reward", this.rewardAbility);
 		}
 		rewardAbility(gameState) {
-			gameState.getPlaying().updateCounter("honour", 1);
+			gameState.getPlaying().updateCounter("honour", 3);
 			gameState.getPlaying().updateCounter("death", 1);
 		}
 	},
@@ -385,15 +391,15 @@ const cards = {
 			gameState.getPlaying().updateCounter("honour", 8);
 		}
 	},
-	IkusMinions: class IkusMinions extends types.Monster {
+	Iku$sMinions: class Iku$sMinions extends types.Monster {
 		constructor() {
 			super();
-			this.name = "Iku'sMinions";
+			this.name = "Iku$sMinions";
 			this.cost = 5;
 			this.addAbility("reward", this.rewardAbility);
 		}
 		rewardAbility(gameState) {
-			gameState.getPlaying().updateCounter("honour", 8);
+			gameState.getPlaying().updateCounter("honour", 4);
 			banish(gameState, true);
 		}
 	},
@@ -427,7 +433,7 @@ const cards = {
 			}
 		}
 	},
-	Pathfinder$sTotem: class Pathfinder_sTotem extends types.LifeboundConstruct {
+	Pathfinder$sTotem: class Pathfinder$sTotem extends types.LifeboundConstruct {
 		constructor() {
 			super();
 			this.name = "Pathfinder$sTotem";
@@ -507,10 +513,10 @@ const cards = {
 			gameState.getPlaying().setCounter("acquireLifebound", 1);
 		}
 	},
-	Asalas_TheImpaler: class Aslas_TheImpaler extends types.LifeboundHero {
+	Asalas_TheImpaler: class Asalas_TheImpaler extends types.LifeboundHero {
 		constructor() {
 			super();
-			this.name = "Aslas_TheImpaler";
+			this.name = "Asalas_TheImpaler";
 			this.cost = 7;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -552,7 +558,7 @@ const cards = {
 			this.name = "ShadowridgeScout";
 			this.cost = 2;
 			this.addAbility("primary", this.primaryAbility);
-			this.echoAbility("echo", this.echoAbility);
+			this.addAbility("echo", this.echoAbility);
 		}
 		primaryAbility(gameState) {
 			gameState.getPlaying().updateCounter("power", 2);
@@ -598,7 +604,7 @@ const cards = {
 			gameState.getPlaying().updateCounter("power", 1);
 		}
 	},
-	DerangedDirge: class DirangedDirge extends types.VoidConstruct {
+	DerangedDirge: class DerangedDirge extends types.VoidConstruct {
 		constructor() {
 			super();
 			this.name = "DerangedDirge";
@@ -664,13 +670,10 @@ module.exports = {
 		Hurras_Sea$sFury: 7,
 		CavernHorror: 2,
 		HellfrostImps: 3,
-		DeathsWidow: 4,
-		GraveGolem: 5,
 		Kan$zir_TheRavager: 6,
 		Iku_ValleyTyrant: 10,
-		IkusMinions: 5,
+		Iku$sMinions: 5,
 		CheerfulConsort: 2,
-		ExcavatorPilot: 4,
 		Pathfinder$sTotem: 1,
 		QadimStalker: 5,
 		AncientStag: 2,
@@ -682,11 +685,12 @@ module.exports = {
 		SpitefulGladiator: 3,
 		ShadowridgeScout: 2,
 		ExcavationSentry: 3,
+		SilencedProphet: 5,
 		BeaconOfTheLost: 1,
 		DerangedDirge: 4,
 		Randall_UmbralSage: 7,
 		EndbringerJora: 6,
-
+		SoulsnareHunter: 4
 	},
 	...cards
 };

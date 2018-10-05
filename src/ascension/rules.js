@@ -1,5 +1,14 @@
 const cards = require("./cards");
 
+// TODO: 3, 4 players
+// TODO: testing
+// TODO: replace empty centre row deck with void
+// TODO: calculate final honour with card values
+// TODO: add tie breaker (last player to start wins)
+// TODO: ensure first player is at the start of the playerId list
+// TODO: card images
+// TODO: more cards
+
 function createStartingDeck() {
 	let deck = [];
 	for (let i = 0; i < 8; i++) {
@@ -13,16 +22,39 @@ function createStartingDeck() {
 
 function createCentreRow() {
 	let deck = [];
-	for (let i = 0; i < 3; i++) {
-		// deck.push("StarvedAbomination");
+	for (let i = 0; i < 6; i++) {
+		deck.push("HellfrostImps");
 	}
 	for (let i = 0; i < 3; i++) {
-		// deck.push("StarvedAbomination");
+		deck.push("CryptLurker");
+		deck.push("StarvedAbomination");
+		deck.push("CavernHorror");
+		deck.push("SoulsnareHunter");
+		deck.push("ShadowridgeScout");
+		deck.push("AncientStag");
+		deck.push("BurialGuardian");
+	}
+	for (let i = 0; i < 2; i++) {
+		deck.push("MutatedScavenger");
+        deck.push("Iku$sMinions");
+        deck.push("DerangedDirge");
+        deck.push("BeaconOfTheLost");
+        deck.push("SilencedProphet");
+        deck.push("SpitefulGladiator");
+        deck.push("ExcavationSentry");
+        deck.push("Pathfinder$sTotem");
+        deck.push("QadimStalker");
+        deck.push("AlosyanGuide");
+        deck.push("CheerfulConsort");
+        deck.push("SirewoodElder");
 	}
 	deck.push("Iku_ValleyTyrant");
 	deck.push("Hurras_Sea$sFury");
-	// deck.push("Kan$zir_TheRavager");
-	// deck.push("Pathfinder$sTotem");
+	deck.push("Kan$zir_TheRavager");
+	deck.push("Randall_UmbralSage");
+	deck.push("EndbringerJora");
+	deck.push("Asalas_TheImpaler");
+	deck.push("CaretakerZahral");
 	return deck;
 }
 
@@ -193,7 +225,7 @@ function cardCost(gameState, cardName) {
 				return card.types.has("temple") ? total + 1 : total;
 			}, 0);
 			return cards._costEnum[cardName] - 2 * temples;
-		case "IkusMinions":
+		case "Iku$sMinions":
 			temples = gameState.getPlaying().inPlay.reduce((total, card) => {
 				return card.types.has("temple") ? total + 1 : total;
 			}, 0);
@@ -236,7 +268,7 @@ function actionBuy(gameState, action) {
 	}
 	if (card.name === "AlosyanGuide" && playing.get("unite") >= 1) {
 		playing.toHand(card);
-	} else if (card.types.has("hero") && playing.get("heroTopDeck")) {
+	} else if (card.types.has("hero") && playing.get("heroTopDeck") === 1) {
 		let choices = [{ name: "Discard", value: 1 }, { name: "Deck", value: 2 }];
 		gameState.addDecision(
 			gameState.playing,
@@ -245,8 +277,10 @@ function actionBuy(gameState, action) {
 			choice => {
 				if (choice.value === 1) {
 					playing.toDiscard(card);
+					playing.setCounter("heroTopDeck", 0);
 				} else if (choice.value === 2) {
 					playing.toDeck(card);
+					playing.setCounter("heroTopDeck", 0);
 				}
 			}
 		);

@@ -13,10 +13,16 @@ function createStartingDeck() {
 
 function createCentreRow() {
 	let deck = [];
-	for (let i = 0; i < 10; i++) {
-		deck.push("StarvedAbomination");
-		deck.push("CheerfulConsort");
+	for (let i = 0; i < 3; i++) {
+		// deck.push("StarvedAbomination");
 	}
+	for (let i = 0; i < 3; i++) {
+		// deck.push("StarvedAbomination");
+	}
+	deck.push("Iku_ValleyTyrant");
+	deck.push("Hurras_Sea$sFury");
+	// deck.push("Kan$zir_TheRavager");
+	// deck.push("Pathfinder$sTotem");
 	return deck;
 }
 
@@ -60,7 +66,7 @@ function actionPlay(gameState, action) {
 function makeAbilityActions(gameState) {
 	let actions = [];
 	gameState.getPlaying().inPlay.forEach((card, index) => {
-		card.availableAbilities().forEach(ability => {
+		card.availableAbilities(gameState).forEach(ability => {
 			actions.push({
 				action: "ability",
 				ability: ability,
@@ -160,47 +166,131 @@ function makeBuyActions(gameState) {
 	// piles
 	Object.keys(gameState.shop.piles).forEach(key => {
 		let pile = gameState.shop.piles[key];
-		if (cards[pile.cardName].getType() === "hero" && pile.amount > 0 && cards._costEnum[pile.cardName] <= runes) {
-			actions.push({ action: "buy", type: "piles", target: key });
+		let cost = cardCost(gameState, pile.cardName);
+		if (cards[pile.cardName].getType() === "hero" && pile.amount > 0 && cost <= runes) {
+			actions.push({ action: "buy", type: "piles", target: key, cost });
 		}
 	});
 	// rows
 	Object.keys(gameState.shop.rows).forEach(key => {
 		let row = gameState.shop.rows[key];
 		row.row.forEach((card, index) => {
-			if (cards[row.row[index]].getType() !== "monster" && card && cards._costEnum[row.row[index]] <= runes) {
-				actions.push({ action: "buy", type: "rows", target: key, index });
+			let cost = cardCost(gameState, card);
+			console.log("CARD: " + card, JSON.stringify(row.row));
+			if (cards[card].getType() !== "monster" && card && cost <= runes) {
+				actions.push({ action: "buy", type: "rows", target: key, index, cost });
 			}
 		});
 	});
 	return actions;
 }
 
+function cardCost(gameState, cardName) {
+	let temples = null;
+	switch (cardName) {
+		case "Iku_ValleyTyrant":
+			temples = gameState.getPlaying().inPlay.reduce((total, card) => {
+				return card.types.has("temple") ? total + 1 : total;
+			}, 0);
+			return cards._costEnum[cardName] - 2 * temples;
+		case "IkusMinions":
+			temples = gameState.getPlaying().inPlay.reduce((total, card) => {
+				return card.types.has("temple") ? total + 1 : total;
+			}, 0);
+			return temples ? cards._costEnum[cardName] - 2 : cards._costEnum[cardName];
+		default:
+			return cards._costEnum[cardName];
+	}
+}
+
 function actionBuy(gameState, action) {
 	let card = null;
+	let playing = gameState.getPlaying();
 	if (action.type === "piles") {
 		card = gameState.shop.fromPile(action.target, gameState);
-		gameState.getPlaying().toDiscard(card);
-		gameState.getPlaying().updateCounter("runes", -card.cost);
 	} else if (action.type === "rows") {
 		card = gameState.shop.fromRow(action.target, action.index, gameState);
-		gameState.getPlaying().toDiscard(card);
-		gameState.getPlaying().updateCounter("runes", -card.cost);
+		let faction = card.faction;
+		if (
+			playing.get("faction") ===
+			1 + ["void", "mechana", "lifebound", "enlightened"].indexOf(faction)
+		) {
+			let nextFaction = cards[
+				gameState.shop.rows[action.target].row[action.index]
+			].getFaction();
+			if (nextFaction === faction) {
+				// if the next card to enter the centre row is also that faction, acquire it without paying its cost
+				let nextCard = gameState.shop.fromRow(action.target, action.index, gameState);
+				let choices = [{ name: "Okay", value: 1 }, { name: "Okay 2", value: 2 }];
+				gameState.addDecision(
+					gameState.playing,
+					"Acquire " + nextCard.name + " for no cost.",
+					choices,
+					choice => {
+						playing.toDiscard(nextCard);
+					}
+				);
+			}
+			playing.setCounter("faction", 0);
+		}
 	}
+	if (card.name === "AlosyanGuide" && playing.get("unite") >= 1) {
+		playing.toHand(card);
+	} else if (card.types.has("hero") && playing.get("heroTopDeck")) {
+		let choices = [{ name: "Discard", value: 1 }, { name: "Deck", value: 2 }];
+		gameState.addDecision(
+			gameState.playing,
+			"Choose where to put the acquired Hero.",
+			choices,
+			choice => {
+				if (choice.value === 1) {
+					playing.toDiscard(card);
+				} else if (choice.value === 2) {
+					playing.toDeck(card);
+				}
+			}
+		);
+	} else {
+		playing.toDiscard(card);
+	}
+	if (card.faction === "lifebound" && playing.get("acquireLifebound")) {
+		playing.updateCounter("death", 1);
+		playing.setCounter("acquireLifebound", 0);
+	}
+	if (card.types.has("hero") && playing.get("acquireHero")) {
+		playing.updateCounter("power", card.cost);
+		playing.setCounter("acquireHero", 0);
+	}
+	playing.updateCounter("runes", -action.cost);
 }
 
 function makeAttackActions(gameState) {
 	let actions = [];
 	let power = gameState.getPlaying().get("power");
 	let pile = gameState.shop.piles.cultist;
-	if (pile.amount > 0 && cards._costEnum[pile.cardName] <= power) {
-		actions.push({ action: "attack", type: "piles", target: "cultist", ability: "reward" });
+	let cost = cardCost(gameState, pile.cardName);
+	if (pile.amount > 0 && cost <= power) {
+		actions.push({
+			action: "attack",
+			type: "piles",
+			target: "cultist",
+			ability: "reward",
+			cost
+		});
 	}
 	Object.keys(gameState.shop.rows).forEach(key => {
 		let row = gameState.shop.rows[key];
 		row.row.forEach((card, index) => {
-			if (cards[pile.cardName].getType() === "monster" && card && cards._costEnum[row.row[index]] <= power) {
-				actions.push({ action: "attack", type: "rows", target: key, index, ability: "reward" });
+			let cost = cardCost(gameState, card);
+			if (cards[card].getType() === "monster" && card && cost <= power) {
+				actions.push({
+					action: "attack",
+					type: "rows",
+					target: key,
+					index,
+					ability: "reward",
+					cost
+				});
 			}
 		});
 	});
@@ -208,16 +298,22 @@ function makeAttackActions(gameState) {
 }
 
 function actionAttack(gameState, action) {
+	let card = null;
 	if (action.type === "piles") {
-		let card = gameState.shop.fromPile(action.target, gameState);
+		card = gameState.shop.fromPile(action.target, gameState);
 		gameState.shop.piles[action.target].amount++;
-		card.onActivate(gameState, action);
-		gameState.getPlaying().updateCounter("power", -card.cost);
 	} else {
-		let card = gameState.shop.fromRow(action.target, action.index, gameState);
-		card.onActivate(gameState, action);
-		gameState.getPlaying().updateCounter("power", -card.cost);
+		card = gameState.shop.fromRow(action.target, action.index, gameState);
+		if (gameState.getPlaying().get("endbringerDefeat")) {
+			gameState.getPlaying().updateCounter("runes", 2);
+		}
+		if (gameState.getPlaying().get("soulsnareDefeat")) {
+			gameState.getPlaying().updateCounter("life", 1);
+			gameState.getPlaying().setCounter("soulsnareDefeat", 0);
+		}
 	}
+	card.onActivate(gameState, action);
+	gameState.getPlaying().updateCounter("power", -action.cost);
 }
 
 module.exports = {
@@ -282,7 +378,13 @@ module.exports = {
 			{ name: "power", value: 0, reset: 0 },
 			{ name: "honour", value: 0 },
 			{ name: "death", value: 0, reset: 0 },
-			{ name: "life", value: 0, reset: 0 }
+			{ name: "life", value: 0, reset: 0 },
+			{ name: "faction", value: 0, reset: 0 },
+			{ name: "unite", value: 0, reset: 0 },
+			{ name: "acquireLifebound", value: 0, reset: 0 },
+			{ name: "acquireHero", value: 0, reset: 0 },
+			{ name: "endbringerDefeat", value: 0, reset: 0 },
+			{ name: "soulsnareDefeat", value: 0, reset: 0 }
 		]
 	},
 	game: {

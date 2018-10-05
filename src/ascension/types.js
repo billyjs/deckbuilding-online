@@ -9,6 +9,7 @@ class Hero extends Card {
 		if (this.isAvailable("primary")) {
 			this.onActivate(gameState, { ability: "primary" });
 		}
+		this.checkUnite(gameState);
 	}
 	onPhaseStart(gameState, location, index) {
 		switch (gameState.phase) {
@@ -25,12 +26,29 @@ class Hero extends Card {
 	}
 	onAcquire(gameState) {}
 	resetCounters() {
+		this.played = false;
 		if (this.abilities.primary) {
 			this.abilities.primary.available = true;
 			this.abilities.primary.used = false;
 		}
+		if (this.abilities.unite) {
+			this.abilities.unite.available = false;
+			this.abilities.unite.used = false;
+		}
+		if (this.abilities.echo) {
+			this.abilities.echo.available = false;
+			this.abilities.echo.used = false;
+		}
 	}
-	onOtherPlay(gameState, other) {}
+	checkUnite(gameState) {
+		if (this.abilities.unite) {
+			let unite = gameState.getPlaying().get("unite") - 1 * this.played;
+			this.abilities.unite.available = unite >= 1;
+		}
+	}
+	onOtherPlay(gameState, other) {
+		this.checkUnite(gameState);
+	}
 	static getType() {
 		return "hero";
 	}
@@ -45,9 +63,13 @@ class Construct extends Card {
 		if (this.isAvailable("primary")) {
 			this.onActivate(gameState, { ability: "primary" });
 		}
+		this.checkUnite(gameState);
 	}
 	onPhaseStart(gameState, location, index) {
 		switch (gameState.phase) {
+			case "play":
+				this.checkUnite(gameState);
+				break;
 			case "discard":
 				if (["hand"].indexOf(location) !== -1) {
 					gameState.getPlaying().discard.push(gameState.getPlaying()[location][index]);
@@ -65,8 +87,28 @@ class Construct extends Card {
 			this.abilities.primary.available = true;
 			this.abilities.primary.used = false;
 		}
+		if (this.abilities.unite) {
+			this.abilities.unite.available = false;
+			this.abilities.unite.used = false;
+		}
+		if (this.abilities.echo) {
+			this.abilities.echo.available = false;
+			this.abilities.echo.used = false;
+		}
+		if (this.abilities.banish) {
+			this.abilities.banish.available = true;
+			this.abilities.banish.used = false;
+		}
 	}
-	onOtherPlay(gameState, other) {}
+	checkUnite(gameState) {
+		if (this.abilities.unite) {
+			let unite = gameState.getPlaying().get("unite");
+			this.abilities.unite.available = unite >= 1;
+		}
+	}
+	onOtherPlay(gameState, other) {
+		this.checkUnite(gameState);
+	}
 	static getType() {
 		return "construct";
 	}
@@ -96,6 +138,9 @@ class Monster extends Card {
 	}
 	onOtherPlay(gameState, other) {}
 	static getType() {
+		return "monster";
+	}
+	static getFaction() {
 		return "monster";
 	}
 }
@@ -161,9 +206,140 @@ class Temple extends Card {
 	}
 }
 
+class VoidHero extends Hero {
+	constructor() {
+		super();
+		this.types.add("void");
+		this.faction = "void";
+	}
+	isAvailable(ability, gameState) {
+		if (ability === "echo" && gameState) {
+			this.abilities[ability].available = gameState.getPlaying().discard.some(card => {
+				return card.faction === "void";
+			});
+		}
+		return (
+			this.abilities.hasOwnProperty(ability) &&
+			this.abilities[ability].available === true &&
+			this.abilities[ability].used === false &&
+			typeof this.abilities[ability].func === "function"
+		);
+	}
+	availableAbilities(gameState) {
+		let abilities = [];
+
+		Object.keys(this.abilities).forEach(ability => {
+			// check is the ability is available
+			if (this.isAvailable(ability, gameState)) {
+				abilities.push(ability);
+			}
+		});
+
+		return abilities;
+	}
+	static getFaction() {
+		return "void";
+	}
+}
+
+class EnlightenedHero extends Hero {
+	constructor() {
+		super();
+		this.types.add("enlightened");
+		this.faction = "enlightened";
+	}
+	static getFaction() {
+		return "enlightened";
+	}
+}
+
+class LifeboundHero extends Hero {
+	constructor() {
+		super();
+		this.types.add("lifebound");
+		this.faction = "lifebound";
+		this.played = false;
+	}
+	onPlay(gameState) {
+		if (this.isAvailable("primary")) {
+			this.onActivate(gameState, { ability: "primary" });
+		}
+		this.played = true;
+		gameState.getPlaying().updateCounter("unite", 1);
+		this.checkUnite(gameState);
+	}
+	static getFaction() {
+		return "lifebound";
+	}
+}
+
+class MechanaHero extends Hero {
+	constructor() {
+		super();
+		this.types.add("mechana");
+		this.faction = "mechana";
+	}
+	static getFaction() {
+		return "mechana";
+	}
+}
+
+class VoidConstruct extends Construct {
+	constructor() {
+		super();
+		this.types.add("void");
+		this.faction = "void";
+	}
+	isAvailable(ability, gameState) {
+		if (ability === "echo" && gameState) {
+			this.abilities[ability].available = gameState.getPlaying().discard.some(card => {
+				return card.faction === "void";
+			});
+		}
+		return (
+			this.abilities.hasOwnProperty(ability) &&
+			this.abilities[ability].available === true &&
+			this.abilities[ability].used === false &&
+			typeof this.abilities[ability].func === "function"
+		);
+	}
+	availableAbilities(gameState) {
+		let abilities = [];
+
+		Object.keys(this.abilities).forEach(ability => {
+			// check is the ability is available
+			if (this.isAvailable(ability, gameState)) {
+				abilities.push(ability);
+			}
+		});
+
+		return abilities;
+	}
+	static getFaction() {
+		return "void";
+	}
+}
+
+class LifeboundConstruct extends Construct {
+	constructor() {
+		super();
+		this.types.add("lifebound");
+		this.faction = "lifebound";
+	}
+	static getFaction() {
+		return "lifebound";
+	}
+}
+
 module.exports = {
 	Hero,
 	Construct,
 	Monster,
-	Temple
+	Temple,
+	VoidHero,
+	EnlightenedHero,
+	LifeboundHero,
+	MechanaHero,
+	VoidConstruct,
+	LifeboundConstruct
 };

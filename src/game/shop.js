@@ -54,7 +54,12 @@ module.exports = class Shop {
 		let card = new this._cards[this.rows[row].row[index]]();
 
 		// replace card being taken
-		this.rows[row].row[index] = this.rows[row].deck.shift();
+		let nextCard = this.rows[row].deck.shift();
+		if (nextCard) {
+			this.rows[row].row[index] = nextCard;
+		} else {
+			this.rows[row].row.splice(index, 1);
+		}
 
 		// run the cards onAcquire()
 		card.onAcquire(gameState);

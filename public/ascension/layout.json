@@ -15,27 +15,27 @@
   "piles": {
     "mystics": {
       "x": -40,
-      "y": 0
+      "y": -2
     },
     "heavyInfantries": {
-      "x": -32,
+      "x": -35,
       "y": 0
     },
     "cultist": {
-      "x": -24,
-      "y": 0
+      "x": -30,
+      "y": 2
     },
     "templeOfLife": {
-      "x": 24,
-      "y": 0
+      "x": 30,
+      "y": 2
     },
     "templeOfDeath": {
-      "x": 32,
+      "x": 35,
       "y": 0
     },
     "templeOfImmortality": {
       "x": 40,
-      "y": 0
+      "y": -2
     }
   },
   "rows": {
@@ -64,7 +64,15 @@
         "cultist": "../ascension/cards/small/cultist.png",
         "templeoflife": "../ascension/cards/small/templeOfLife.png",
         "templeofdeath": "../ascension/cards/small/templeOfDeath.png",
-        "templeofimmortality": "../ascension/cards/small/templeOfImmortality.png"
+        "templeofimmortality": "../ascension/cards/small/templeOfImmortality.png",
+
+        "iku_valleytyrant": "../ascension/cards/small/ikuValleyTyrant.png",
+        "hurras_sea$sfury": "../ascension/cards/small/hurrasSeasFury.png",
+        "kan$zir_theravager": "../ascension/cards/small/kanzirTheRavager.png",
+
+        "cheerfulconsort": "../ascension/cards/small/cheerfulConsort.png",
+        "pathfinder$stotem": "../ascension/cards/small/pathfindersTotem.png",
+        "qadimstalker": "../ascension/cards/small/qadimStalker.png"
       }
     },
     "actions": {

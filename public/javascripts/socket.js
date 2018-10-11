@@ -8,6 +8,9 @@ let gameState = null;
 let decidingMesh = null;
 let layout = null;
 
+let opponent = null;
+let actions = [];
+
 // document elements
 const header = document.getElementsByClassName("header")[0];
 const joining = document.getElementById("joining");
@@ -23,7 +26,11 @@ const playerList = document.getElementById("players");
 const startButton = document.getElementById("start");
 
 const labels = document.getElementById("labels");
+const opponentLabels = document.getElementById("opponent-labels");
 const decision = document.getElementById("decision");
+
+const leftButton = document.getElementById("opponent-button-left");
+const rightButton = document.getElementById("opponent-button-right");
 
 const gameSelect = document.getElementById("gameSelect");
 games.forEach(game => {
@@ -63,6 +70,14 @@ joinButton.onclick = () => {
 startButton.onclick = () => {
 	socket.emit("startGame", { gameId });
 };
+
+leftButton.onclick = () => {
+	nextOpponent(false);
+};
+
+rightButton.onclick = () => {
+	nextOpponent(true);
+}
 
 // socket.io handlers
 socket.on("responseJoin", response => {
@@ -114,6 +129,87 @@ socket.on("gameCanceled", data => {
 	}, 10000);
 });
 
+function nextOpponent(direction) {
+	opponentLabels.innerHTML = "";
+	let players = Object.keys(gameState.players).filter(player => player !== socket.id);
+	let index = players.indexOf(opponent);
+	if (index === -1) {
+		index = 0;
+	} else {
+		index = (direction ? index + 1 : index - 1 + players.length) % players.length;
+	}
+	opponent = players[index];
+	createMeshes(opponent, gameState);
+	handleRequestAction(actions);
+}
+
+function createMeshes(key, gs) {
+	let self = key === socket.id;
+	let player = gs.players[key];
+
+	// update counters
+	let offset = self ? -1 : 1;
+
+	let text = "";
+	layout.counters.display.forEach(counter => {
+		if (typeof counter === "string") {
+			text +=
+				"<p>" +
+				counter.replace(/^(\w)/g, c => c.toUpperCase()) +
+				": " +
+				player.counters[counter] +
+				"</p>";
+		} else {
+			let reducer = (total, current) => total + player.counters[current];
+			text += "<p>" + counter.name + ": " + counter.main.reduce(reducer, 0);
+			if (counter.additional) {
+				let additional = counter.additional.reduce(reducer, 0);
+				if (additional > 0) {
+					text += " +" + additional;
+				} else if (additional < 0) {
+					text += " " + additional;
+				}
+			}
+		}
+	});
+
+	displayLabel(
+		layout.counters.x * offset,
+		layout.counters.y * offset,
+		layout.counters.z || 0,
+		layout.counters.width,
+		layout.counters.height,
+		text,
+		self ? labels : opponentLabels
+	);
+
+	// update deck
+	displayDeck({ back: true, count: player.deck }, self);
+
+	//update discard
+	displayDiscard({ back: true, count: player.discard.length }, self);
+
+	// update hands
+	if (self) {
+		displayHand(
+			player.hand.map(name => {
+				return { name: name };
+			}),
+			self
+		);
+	} else {
+		displayHand(Array(player.hand).fill({ back: true }));
+	}
+
+	// update inplay
+	displayInplay(
+		player.inPlay.map(name => {
+			return { name: name };
+		}),
+		self
+	);
+}
+
 // when a gameState message is received from the server
 socket.on("gameState", gs => {
 	// if the player playing in the previous gameState and the new gameState
@@ -132,6 +228,14 @@ socket.on("gameState", gs => {
 	// update the gameState to the new gameState
 	gameState = gs;
 
+	if (Object.keys(gameState.players).length > 2) {
+		leftButton.style.display = "block";
+		rightButton.style.display = "block";
+	} else {
+		leftButton.style.display = "none";
+		rightButton.style.display = "none";
+	}
+
 	// if the game is over and there is a winner show a message that you won or lost the game
 	if (gs.winner === socket.id) {
 		createPlane(0, 0, 2, 70, 22, null, textures.displays.youwon);
@@ -148,77 +252,23 @@ socket.on("gameState", gs => {
 
 	// remove all labels before adding the new labels
 	labels.innerHTML = "";
+	opponentLabels.innerHTML = "";
+
+	// opponent = null;
 
 	// for each player display their deck, discard, hand, inplay, and counters
 	Object.keys(gs.players).forEach(key => {
 		let self = key === socket.id;
-		let player = gs.players[key];
 
-		// update counters
-		let offset = self ? -1 : 1;
-
-		let text = "";
-		layout.counters.display.forEach(counter => {
-			if (typeof counter === "string") {
-                text +=
-					"<p>" +
-                    counter.replace(/^(\w)/g, c => c.toUpperCase()) +
-                    ": " +
-                    player.counters[counter] +
-                    "</p>";
-			} else {
-				let reducer = (total, current) => total + player.counters[current];
-				text +=
-					"<p>" +
-					counter.name +
-					": " +
-					counter.main.reduce(reducer, 0);
-				if (counter.additional) {
-					let additional = counter.additional.reduce(reducer, 0);
-					if (additional > 0) {
-						text += " +" + additional;
-					} else if (additional < 0) {
-						text += " " + additional;
-					}
-				}
-			}
-
-		});
-
-		displayLabel(
-			layout.counters.x * offset,
-			layout.counters.y * offset,
-			layout.counters.z || 0,
-			layout.counters.width,
-			layout.counters.height,
-			text
-		);
-
-		// update deck
-		displayDeck({ back: true, count: player.deck }, self);
-
-		//update discard
-		displayDiscard({ back: true, count: player.discard.length }, self);
-
-		// update hands
-		if (self) {
-			displayHand(
-				player.hand.map(name => {
-					return { name: name };
-				}),
-				self
-			);
-		} else {
-			displayHand(Array(player.hand).fill({ back: true }));
+		if (!opponent && !self) {
+			opponent = key;
 		}
 
-		// update inplay
-		displayInplay(
-			player.inPlay.map(name => {
-				return { name: name };
-			}),
-			self
-		);
+		if (!self && key !== opponent) {
+			console.log(key);
+			return; // do not add meshes for other players
+		}
+		createMeshes(key, gs);
 	});
 
 	// display piles with their set x y positions
@@ -230,7 +280,8 @@ socket.on("gameState", gs => {
 			},
 			layout.piles[pile].x,
 			layout.piles[pile].y,
-			layout.piles[pile].target || pile
+			layout.piles[pile].target || pile,
+			labels
 		);
 	});
 
@@ -253,7 +304,8 @@ socket.on("gameState", gs => {
 					},
 					layout.rows[row].deck.x,
 					layout.rows[row].deck.y,
-					layout.rows[row].deck.target || row
+					layout.rows[row].deck.target || row,
+					labels
 				);
 			}
 		}
@@ -261,22 +313,41 @@ socket.on("gameState", gs => {
 	highlightMeshes();
 });
 
-// when a requestAction message is received from the server
-socket.on("requestAction", actions => {
+function handleRequestAction(actions) {
+	if (gameState.playing !== socket.id) {
+		return;
+	}
 	resetClickableMeshes();
-	JSON.parse(actions).forEach(action => {
+	actions.forEach(action => {
 		if (!action.type || !action.target) {
 			console.log("Unable to link action!");
 			console.log(action);
 			return;
 		}
 
-		let mesh = meshes[action.type][action.target];
+		if (
+			action.type !== opponent &&
+			action.type !== "player" &&
+			action.type !== "piles" &&
+			action.type !== "rows"
+		) {
+			console.log(action.type);
+			return;
+		}
+
+		let type = null;
+		if (action.type === opponent) {
+			type = "opponent";
+		} else {
+			type = action.type;
+		}
+
+		let mesh = meshes[type][action.target];
 		if (action.index !== undefined) {
 			mesh = mesh[action.index];
 		}
-		if(!mesh) {
-			console.log("No mesh at: " + action.type + " " + action.target);
+		if (!mesh) {
+			console.log("No mesh at: " + type + " " + action.target);
 		}
 		mesh.actions.push({
 			...action,
@@ -286,6 +357,12 @@ socket.on("requestAction", actions => {
 		});
 	});
 	highlightMeshes();
+}
+
+// when a requestAction message is received from the server
+socket.on("requestAction", a => {
+	actions = JSON.parse(a);
+	handleRequestAction(actions);
 });
 
 // when a requestDecision message is received from the server

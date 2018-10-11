@@ -14,7 +14,8 @@ a {
   right: 20px;
   color: #fff;
 }
-#labels {
+#labels,
+#opponent-labels {
   display: fixed;
   color: #fff;
   font-size: 3vh;
@@ -22,12 +23,29 @@ a {
   text-align: center;
   text-shadow: 0.2vh 0.2vh #000;
 }
-#labels p {
+#labels p,
+#opponent-labels p {
   margin: 1vh 0;
 }
-#labels .large {
+#labels .large,
+#opponent-labels .large {
   margin: 5vh 0;
   font-size: 5vh;
+}
+.opponent-button {
+  display: none;
+  position: fixed;
+  height: 20vh;
+  width: 20px;
+  border: 0;
+  background-color: #f00;
+  top: 0;
+}
+#opponent-button-right {
+  right: 0;
+}
+#opponent-button-left {
+  left: 0;
 }
 #decision {
   display: none;

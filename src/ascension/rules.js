@@ -1,13 +1,8 @@
 const cards = require("./cards");
 
-// TODO: 3, 4 players
-// TODO: testing
-// TODO: replace empty centre row deck with void
-// TODO: calculate final honour with card values
-// TODO: add tie breaker (last player to start wins)
-// TODO: ensure first player is at the start of the playerId list
+// TODO: 3, 4 players !!!!!!!!!!!
+// TODO: replace empty centre row deck with void !!!!!!!!!
 // TODO: card images
-// TODO: more cards
 
 function createStartingDeck() {
 	let deck = [];
@@ -36,17 +31,17 @@ function createCentreRow() {
 	}
 	for (let i = 0; i < 2; i++) {
 		deck.push("MutatedScavenger");
-        deck.push("Iku$sMinions");
-        deck.push("DerangedDirge");
-        deck.push("BeaconOfTheLost");
-        deck.push("SilencedProphet");
-        deck.push("SpitefulGladiator");
-        deck.push("ExcavationSentry");
-        deck.push("Pathfinder$sTotem");
-        deck.push("QadimStalker");
-        deck.push("AlosyanGuide");
-        deck.push("CheerfulConsort");
-        deck.push("SirewoodElder");
+		deck.push("Iku$sMinions");
+		deck.push("DerangedDirge");
+		deck.push("BeaconOfTheLost");
+		deck.push("SilencedProphet");
+		deck.push("SpitefulGladiator");
+		deck.push("ExcavationSentry");
+		deck.push("Pathfinder$sTotem");
+		deck.push("QadimStalker");
+		deck.push("AlosyanGuide");
+		deck.push("CheerfulConsort");
+		deck.push("SirewoodElder");
 	}
 	deck.push("Iku_ValleyTyrant");
 	deck.push("Hurras_Sea$sFury");
@@ -63,13 +58,24 @@ function endCondition(gameState) {
 		return total + gameState.players[playerId].get("honour");
 	}, 0);
 	let players = 2; // TODO: dynamically set player count
-	if (honour >= players * 30) {
-		// TODO: add honour from cards
+	if (honour >= players * 5) {
 		return gameState._playerIds.reduce((max, playerId) => {
-			return gameState.players[max] > gameState.players[playerId] ? max : playerId;
-		});
+			let player = gameState.players[playerId];
+			let cardHonour = getCardsHonour(player);
+			player.updateCounter("honour", cardHonour);
+			if (max === null) {
+				return playerId;
+			} else {
+				return gameState.players[max].get("honour") > player.get("honour") ? max : playerId;
+			}
+		}, null);
 	}
 	return null;
+}
+
+function getCardsHonour(player) {
+	let cards = [...player.hand, ...player.inPlay, ...player.discard, ...player.deck];
+	return cards.reduce((honour, card) => honour + card.value, 0);
 }
 
 function drawAmount() {
@@ -164,7 +170,7 @@ function findTemple(gameState, name) {
 			}
 		});
 		if (type) {
-			type = type === gameState.playing ? "player" : "opponent";
+			type = type === gameState.playing ? "player" : type;
 		}
 	}
 	return {
@@ -208,7 +214,6 @@ function makeBuyActions(gameState) {
 		let row = gameState.shop.rows[key];
 		row.row.forEach((card, index) => {
 			let cost = cardCost(gameState, card);
-			console.log("CARD: " + card, JSON.stringify(row.row));
 			if (cards[card].getType() !== "monster" && card && cost <= runes) {
 				actions.push({ action: "buy", type: "rows", target: key, index, cost });
 			}
@@ -346,6 +351,7 @@ function actionAttack(gameState, action) {
 			gameState.getPlaying().setCounter("soulsnareDefeat", 0);
 		}
 	}
+	gameState.shop.rows.centreRow.discard.push(card.name);
 	card.onActivate(gameState, action);
 	gameState.getPlaying().updateCounter("power", -action.cost);
 }
@@ -354,7 +360,7 @@ module.exports = {
 	cards: cards,
 	players: {
 		min: 2,
-		max: 2 // TODO: allow 4 players
+		max: 4 // TODO: allow 4 players
 	},
 	phases: ["play", "discard", "draw"],
 	endPhases: ["play", "discard", "draw"],
@@ -370,6 +376,7 @@ module.exports = {
 			{
 				name: "centreRow",
 				deck: createCentreRow(),
+				discard: [],
 				shown: 6
 			}
 		],

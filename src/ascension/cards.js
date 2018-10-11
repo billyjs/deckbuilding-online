@@ -58,7 +58,10 @@ function banish(gameState, optional) {
 		choices,
 		choice => {
 			if (choice.value !== false) {
-				gameState.getPlaying().from(choice.value.target, choice.value.index);
+				let card = gameState.getPlaying().from(choice.value.target, choice.value.index);
+				if (["Apprentice", "Militia", "Mystic", "HeavyInfanty"].indexOf(card.name) === -1) {
+					gameState.shop.rows.centreRow.discard.push(card.name);
+				}
 			}
 		}
 	);
@@ -95,6 +98,7 @@ function defeatHellfrostImps(gameState) {
 		choice => {
 			if (choice.value) {
 				let card = gameState.shop.fromRow("centreRow", choice.value.index, gameState);
+				gameState.shop.rows.centreRow.discard.push(card.name);
 				card.onActivate(gameState, {
 					action: "attack",
 					type: "rows",
@@ -178,25 +182,22 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "Apprentice";
+			this.value = 0;
 			this.addAbility("primary", this.primaryAbility);
 		}
 		primaryAbility(gameState) {
 			gameState.getPlaying().updateCounter("runes", 1);
-			gameState.getPlaying().updateCounter("power", 2);
 		}
 	},
 	Militia: class Militia extends types.Hero {
 		constructor() {
 			super();
 			this.name = "Militia";
+			this.value = 0;
 			this.addAbility("primary", this.primaryAbility);
 		}
 		primaryAbility(gameState) {
 			gameState.getPlaying().updateCounter("power", 1);
-			// TODO: remove keystones
-            gameState.getPlaying().updateCounter("runes", 5);
-			gameState.getPlaying().updateCounter("life", 1);
-			gameState.getPlaying().updateCounter("death", 1);
 		}
 	},
 	Mystic: class Mystic extends types.Hero {
@@ -204,6 +205,7 @@ const cards = {
 			super();
 			this.name = "Mystic";
 			this.cost = 3;
+			this.value = 1;
 			this.addAbility("primary", this.primaryAbility);
 		}
 		primaryAbility(gameState) {
@@ -214,6 +216,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "HeavyInfantry";
+			this.value = 1;
 			this.cost = 2;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -236,6 +239,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "TempleOfLife";
+			this.value = 5;
 			this.keystone = "life";
 			this.addAbility("keystone", this.keystoneAbility.bind(this), false, false);
 		}
@@ -250,6 +254,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "TempleOfDeath";
+			this.value = 5;
 			this.keystone = "death";
 			this.addAbility("keystone", this.keystoneAbility.bind(this), false, false);
 		}
@@ -264,6 +269,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "TempleOfImmortality";
+			this.value = 10;
 			this.addAbility("primary", this.primaryAbility.bind(this));
 		}
 		primaryAbility(gameState) {
@@ -407,6 +413,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "CheerfulConsort";
+			this.value = 1;
 			this.cost = 2;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -419,6 +426,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "ExcavatorPilot";
+			this.value = 1; // TODO: find honour value
 			this.cost = 4;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -437,6 +445,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "Pathfinder$sTotem";
+			this.value = 1;
 			this.cost = 1;
 			this.addAbility("unite", this.uniteAbility);
 		}
@@ -448,6 +457,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "QadimStalker";
+			this.value = 3;
 			this.cost = 5;
 			this.addAbility("primary", this.primaryAbility);
 			this.addAbility("unite", this.uniteAbility);
@@ -464,6 +474,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "AncientStag";
+			this.value = 1;
 			this.cost = 2;
 			this.addAbility("primary", this.primaryAbility);
 			this.addAbility("unite", this.uniteAbility);
@@ -479,6 +490,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "SirewoodElder";
+			this.value = 1; // TODO: find honour value
 			this.cost = 3;
 			this.addAbility("primary", this.primaryAbility);
 			this.addAbility("unite", this.uniteAbility);
@@ -494,6 +506,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "AlosyanGuide";
+			this.value = 1;
 			this.cost = 3;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -505,6 +518,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "BurialGuardian";
+			this.value = 1; // TODO: find honour value
 			this.cost = 4;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -517,6 +531,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "Asalas_TheImpaler";
+			this.value = 5;
 			this.cost = 7;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -529,6 +544,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "CaretakerZahral";
+			this.value = 4;
 			this.cost = 6;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -541,6 +557,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "SpitefulGladiator";
+			this.value = 2;
 			this.cost = 3;
 			this.addAbility("primary", this.primaryAbility);
 			this.addAbility("echo", this.echoAbility);
@@ -556,6 +573,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "ShadowridgeScout";
+			this.value = 1;
 			this.cost = 2;
 			this.addAbility("primary", this.primaryAbility);
 			this.addAbility("echo", this.echoAbility);
@@ -571,6 +589,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "ExcavationSentry";
+			this.value = 1; // TODO: find honour value
 			this.cost = 3;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -584,6 +603,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "SilencedProphet";
+			this.value = 3;
 			this.cost = 5;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -597,6 +617,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "BeaconOfTheLost";
+			this.value = 1; // TODO: find honour value
 			this.cost = 1;
 			this.addAbility("echo", this.echoAbility);
 		}
@@ -608,6 +629,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "DerangedDirge";
+			this.value = 2;
 			this.cost = 4;
 			this.addAbility("primary", this.primaryAbility);
 			this.addAbility("banish", this.banishAbility);
@@ -617,13 +639,16 @@ const cards = {
 		}
 		banishAbility(gameState, action) {
 			banish(gameState);
-			gameState.getPlaying().fromInPlay(action.index);
+			gameState.shop.rows.centreRow.discard.push(
+				gameState.getPlaying().fromInPlay(action.index).name
+			);
 		}
 	},
 	Randall_UmbralSage: class Randall_UmbralSage extends types.VoidHero {
 		constructor() {
 			super();
 			this.name = "Randall_UmbralSage";
+			this.value = 4;
 			this.cost = 7;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -637,6 +662,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "EndbringerJora";
+			this.value = 4;
 			this.cost = 6;
 			this.addAbility("primary", this.primaryAbility);
 		}
@@ -649,6 +675,7 @@ const cards = {
 		constructor() {
 			super();
 			this.name = "SoulsnareHunter";
+			this.value = 2;
 			this.cost = 4;
 			this.addAbility("primary", this.primaryAbility);
 		}

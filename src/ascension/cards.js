@@ -33,7 +33,7 @@ function banish(gameState, optional) {
 	choices.push(
 		...gameState.getPlaying().hand.map((card, index) => {
 			return {
-				name: "Hand: " + card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
+				name: "Hand: " + card.name.replace(/([a-z](?=[A-Z]))/g, "$1 ").replace(/_/g, ", ").replace(/\$/g, "'"),
 				value: {
 					target: "hand",
 					index: index
@@ -44,7 +44,7 @@ function banish(gameState, optional) {
 	choices.push(
 		...gameState.getPlaying().discard.map((card, index) => {
 			return {
-				name: "Discard: " + card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
+				name: "Discard: " + card.name.replace(/([a-z](?=[A-Z]))/g, "$1 ").replace(/_/g, ", ").replace(/\$/g, "'"),
 				value: {
 					target: "discard",
 					index: index
@@ -161,7 +161,7 @@ function getVoid(gameState) {
 	let choices = [];
 	gameState.getPlaying().discard.forEach((card, index) => {
 		if (card.faction === "void") {
-			choices.push({ name: card.name, value: { index } });
+			choices.push({ name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 ").replace(/_/g, ", ").replace(/\$/g, "'"), value: { index } });
 		}
 	});
 	gameState.addDecision(
@@ -245,7 +245,6 @@ const cards = {
 		}
 		keystoneAbility(gameState) {
 			gameState.getPlaying().updateCounter("life", -1);
-			this.checkKeystones(gameState);
 			gainImmortality(gameState);
 			gameState.getPlaying().updateCounter("runes", 2);
 		}
@@ -260,7 +259,6 @@ const cards = {
 		}
 		keystoneAbility(gameState) {
 			gameState.getPlaying().updateCounter("death", -1);
-			this.checkKeystones(gameState);
 			gainImmortality(gameState);
 			banish(gameState, true);
 		}

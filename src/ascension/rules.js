@@ -1,9 +1,5 @@
 const cards = require("./cards");
 
-// TODO: 3, 4 players !!!!!!!!!!!
-// TODO: replace empty centre row deck with void !!!!!!!!!
-// TODO: card images
-
 function createStartingDeck() {
 	let deck = [];
 	for (let i = 0; i < 8; i++) {
@@ -57,8 +53,8 @@ function endCondition(gameState) {
 	let honour = gameState._playerIds.reduce((total, playerId) => {
 		return total + gameState.players[playerId].get("honour");
 	}, 0);
-	let players = 2; // TODO: dynamically set player count
-	if (honour >= players * 5) {
+	let players = gameState._playerIds.length;
+	if (honour >= players * 30) {
 		return gameState._playerIds.reduce((max, playerId) => {
 			let player = gameState.players[playerId];
 			let cardHonour = getCardsHonour(player);
@@ -360,7 +356,7 @@ module.exports = {
 	cards: cards,
 	players: {
 		min: 2,
-		max: 4 // TODO: allow 4 players
+		max: 4
 	},
 	phases: ["play", "discard", "draw"],
 	endPhases: ["play", "discard", "draw"],

@@ -103,7 +103,6 @@ class Construct extends Card {
 	checkUnite(gameState) {
 		if (this.abilities.unite) {
 			let unite = gameState.getPlaying().get("unite");
-			console.log("UNITE: ", unite);
 			this.abilities.unite.available = unite >= 1;
 		}
 	}
@@ -152,14 +151,9 @@ class Temple extends Card {
 		this.types.add("temple");
 		this.keystone = null;
 	}
-	onPlay(gameState) {
-		this.checkKeystones(gameState, this.keystone);
-	}
+	onPlay(gameState) {}
 	onPhaseStart(gameState) {
 		switch (gameState.phase) {
-			case "play":
-				this.checkKeystones(gameState, this.keystone);
-				break;
 			case "discard":
 				this.resetCounters();
 				break;
@@ -178,17 +172,30 @@ class Temple extends Card {
 			this.abilities.keystone.used = false;
 		}
 	}
-	checkKeystones(gameState) {
-		console.log("CHECKING");
-		if (this.keystone && this.abilities.keystone) {
-			let amount = gameState.getPlaying().get(this.keystone);
-			this.abilities.keystone.available = amount >= 1;
-			console.log(this.abilities.keystone);
+	isAvailable(ability, gameState) {
+		if (this.keystone && this.abilities.keystone && ability === "keystone" && gameState) {
+			this.abilities[ability].available = gameState.getPlaying().get(this.keystone) >= 1;
 		}
+		return (
+			this.abilities.hasOwnProperty(ability) &&
+			this.abilities[ability].available === true &&
+			this.abilities[ability].used === false &&
+			typeof this.abilities[ability].func === "function"
+		);
 	}
-	onOtherPlay(gameState, other) {
-		this.checkKeystones(gameState, this.keystone);
+	availableAbilities(gameState) {
+		let abilities = [];
+
+		Object.keys(this.abilities).forEach(ability => {
+			// check is the ability is available
+			if (this.isAvailable(ability, gameState)) {
+				abilities.push(ability);
+			}
+		});
+
+		return abilities;
 	}
+	onOtherPlay(gameState, other) {}
 	onActivate(gameState, action) {
 		// check if the ability in the action is available
 		if (action && this.isAvailable(action.ability)) {

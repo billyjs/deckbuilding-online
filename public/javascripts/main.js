@@ -531,7 +531,11 @@ function clickableMeshes() {
 	Object.keys(meshes).forEach(key => {
 		Object.keys(meshes[key]).forEach(key2 => {
 			if (!Array.isArray(meshes[key][key2])) {
-				if (meshes[key][key2] && meshes[key][key2].actions && meshes[key][key2].actions.length !== 0) {
+				if (
+					meshes[key][key2] &&
+					meshes[key][key2].actions &&
+					meshes[key][key2].actions.length !== 0
+				) {
 					clickable.push(meshes[key][key2]);
 					if (meshes[key][key2].menu) {
 						meshes[key][key2].menu.forEach(menuItem => {

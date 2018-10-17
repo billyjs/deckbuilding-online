@@ -1,6 +1,6 @@
 const socket = io();
 // TODO: move to a config file
-const games = ["starRealms", "starRealmsQuick", "armyForce", "ascension"];
+const games = ["starRealms", "starRealmsDemo", "armyForce", "ascension", "ascensionDemo"];
 
 let gameId = null;
 let gameName = null;
@@ -77,7 +77,7 @@ leftButton.onclick = () => {
 
 rightButton.onclick = () => {
 	nextOpponent(true);
-}
+};
 
 // socket.io handlers
 socket.on("responseJoin", response => {

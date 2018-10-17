@@ -1,19 +1,26 @@
-const cards = require("./cards");
+const cards = require("../starRealms/cards");
 
 function createStartingDeck() {
 	let deck = [];
-	for (let i = 0; i < 8; i++) {
-		deck.push(new cards.Scout());
+	for (let i = 0; i < 2; i++) {
+		// deck.push(new cards.Scout());
 		// deck.push(new cards.BlobCarrier());
 		// deck.push(new cards.RecyclingStation());
+		deck.push(new cards.TradePod());
+		deck.push(new cards.StealthNeedle());
+		deck.push(new cards.Ram());
+		deck.push(new cards.RecyclingStation());
+		deck.push(new cards.TheHive());
 	}
 	for (let i = 0; i < 2; i++) {
-		deck.push(new cards.Viper());
+		// deck.push(new cards.Viper());
 		// deck.push(new cards.BattlePod());
 		// deck.push(new cards.BlobDestroyer());
 		// deck.push(new cards.BlobCarrier());
 		// deck.push(new cards.BlobWorld());
 	}
+	deck.push(new cards.SurveyShip());
+	deck.push(new cards.SupplyBot());
 	return deck;
 }
 
@@ -344,7 +351,7 @@ module.exports = {
 		counters: [
 			{ name: "trade", value: 0, reset: 0 },
 			{ name: "combat", value: 0, reset: 0 },
-			{ name: "authority", value: 50 },
+			{ name: "authority", value: 10 },
 			{ name: "blobs", value: 0, reset: 0 },
 			{ name: "buyTopDeck", value: 0, reset: 0 }
 		]

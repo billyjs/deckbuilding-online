@@ -6,7 +6,10 @@
         "main": ["influence"],
         "additional": ["tempInfluence"]
       },
-      "armyPower",
+      {
+        "name": "Army Power",
+        "main": ["armyPower"]
+      },
       "actions",
       "recruitment"
     ],
@@ -61,9 +64,9 @@
   "textures": {
     "cards": {
       "small": {
-        "back": "../starRealms/cards/small/back.png",
-        "empty": "../starRealms/cards/small/empty.png",
-        "undef": "../starRealms/cards/small/undef.png",
+        "back": "../armyForce/cards/small/back.png",
+        "empty": "../armyForce/cards/small/empty.png",
+        "undef": "../armyForce/cards/small/undef.png",
         "commanderbernard": "../armyForce/cards/small/bernard.png",
         "commanderhopkins": "../armyForce/cards/small/hopkins.png",
         "commanderholt": "../armyForce/cards/small/holt.png",
@@ -88,18 +91,18 @@
       "large": {}
     },
     "actions": {
-      "undef": "../starRealms/actions/undef.png",
-      "play": "../starRealms/actions/play.png",
-      "end": "../starRealms/actions/end.png",
-      "buy": "../starRealms/actions/buy.png",
-      "primary": "../starRealms/actions/primary.png"
+      "undef": "../armyForce/actions/undef.png",
+      "play": "../armyForce/actions/play.png",
+      "choose": "../armyForce/actions/end.png",
+      "recruit": "../armyForce/actions/buy.png",
+      "buy": "../armyForce/actions/primary.png"
     },
     "displays": {
-      "yourturn": "../starRealms/displays/yourturn.png",
-      "oppturn": "../starRealms/displays/oppturn.png",
-      "youwon": "../starRealms/displays/youwon.png",
-      "youlost": "../starRealms/displays/youlost.png",
-      "wait": "../starRealms/displays/wait.png"
+      "yourturn": "../armyForce/displays/yourturn.png",
+      "oppturn": "../armyForce/displays/oppturn.png",
+      "youwon": "../armyForce/displays/youwon.png",
+      "youlost": "../armyForce/displays/youlost.png",
+      "wait": "../armyForce/displays/wait.png"
     }
   }
 }

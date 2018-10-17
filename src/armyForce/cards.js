@@ -238,7 +238,6 @@ const cards = {
 		}
 		primaryAbility(gameState) {
 			let opponent = gameState.getNotPlaying()[0];
-			console.log(gameState.getNotPlaying());
 			let choices = opponent.hand.map((card, index) => {
 				return {
 					name: "Card " + index,

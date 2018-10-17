@@ -58,7 +58,8 @@ function makePlayingActions(gameState) {
 
 function makeRecruitmentActions(gameState) {
 	let actions = [];
-	let influence = gameState.getPlaying().get("influence") + gameState.getPlaying().get("tempInfluence");
+	let influence =
+		gameState.getPlaying().get("influence") + gameState.getPlaying().get("tempInfluence");
 	let recruitment = gameState.getPlaying().get("recruitment");
 	Object.keys(gameState.shop.piles).forEach(key => {
 		let pile = gameState.shop.piles[key];
@@ -194,11 +195,6 @@ module.exports = {
 				deck: createActionDeck(),
 				shown: 3
 			}
-			// {
-			// 	name: "commanders",
-			// 	deck: Array(10).fill("CommanderBernard"),
-			// 	shown: 10 // TODO: make special case to show all cards
-			// }
 		],
 		piles: [
 			{

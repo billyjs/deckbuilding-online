@@ -1084,7 +1084,7 @@ const cards = {
 			gameState.getPlaying().inPlay.forEach(card => {
 				if (card.types.has("ship") && card.name !== "StealthNeedle") {
 					choices.push({
-						name: card.name,
+						name: card.name.replace(/([a-z](?=[A-Z]))/g, "$1 "),
 						value: card.name
 					});
 				}
@@ -1100,6 +1100,11 @@ const cards = {
 						this.name = this.copied.name;
 						this.faction = this.copied.faction;
 						this.checkAlly(gameState);
+						gameState.getPlaying().inPlay.forEach(card => {
+							if (card !== this) {
+								card.onOtherPlay(gameState, this);
+							}
+						});
 					} else {
 						this.abilities.primary.func = () => {};
 						this.abilities.primary.used = true;

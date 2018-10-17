@@ -254,13 +254,20 @@ function actionBuy(gameState, action) {
 			if (nextFaction === faction) {
 				// if the next card to enter the centre row is also that faction, acquire it without paying its cost
 				let nextCard = gameState.shop.fromRow(action.target, action.index, gameState);
-				let choices = [{ name: "Okay", value: 1 }, { name: "Okay 2", value: 2 }];
+				let choices = [{ name: "Acquire", value: 1 }, { name: "Do Not Acquire", value: 2 }];
 				gameState.addDecision(
 					gameState.playing,
-					"Acquire " + nextCard.name + " for no cost.",
+					"Acquire " +
+						nextCard.name
+							.replace(/([a-z](?=[A-Z]))/g, "$1 ")
+							.replace(/_/g, ", ")
+							.replace(/\$/g, "'") +
+						" for no cost.",
 					choices,
 					choice => {
-						playing.toDiscard(nextCard);
+						if (choice.value === 1) {
+							playing.toDiscard(nextCard);
+						}
 					}
 				);
 			}

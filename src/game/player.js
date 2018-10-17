@@ -41,11 +41,22 @@ module.exports = class Player {
 	}
 
 	play(gameState, index) {
-		let card = this.hand[index];
+		let played = this.hand[index];
+		let inPlay = this.inPlay.slice();
+		this.inPlay.push(...this.hand.splice(index, 1));
+		played.onPlay(gameState); // testing onPlay before onOtherPlay
+		inPlay.forEach(card => {
+			card.onOtherPlay(gameState, played);
+		});
+		// card.onPlay(gameState);
+		return played;
+	}
+
+	playCard(gameState, card) {
 		this.inPlay.forEach(inPlay => {
 			inPlay.onOtherPlay(gameState, card);
 		});
-		this.inPlay.push(...this.hand.splice(index, 1));
+		this.inPlay.push(card);
 		card.onPlay(gameState);
 		return card;
 	}
@@ -69,7 +80,7 @@ module.exports = class Player {
 	}
 
 	refreshDeck() {
-		this.deck = helper.shuffleCopy(this.discard);
+		this.deck = helper.shuffleCopy([...this.discard, ...this.deck]);
 		this.discard = [];
 	}
 
@@ -89,11 +100,23 @@ module.exports = class Player {
 		}
 	}
 
-	toDiscard(card) {
-		this.discard.push(card);
+	toDiscard(discarded) {
+		if (Array.isArray(discarded)) {
+			this.discard.push(...discarded);
+		} else {
+			this.discard.push(discarded);
+		}
 	}
 
 	toDeck(card) {
 		this.deck.unshift(card);
+	}
+
+	toHand(card) {
+		if (Array.isArray(card)) {
+			this.hand.push(...card);
+		} else {
+			this.hand.push(card);
+		}
 	}
 };

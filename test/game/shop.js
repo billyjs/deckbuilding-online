@@ -55,31 +55,35 @@ describe("Shop", function() {
 		});
 
 		it("should add a row to the shop", function() {
-			let created = shop.createRow("testRow", deck, 1, false);
+			let created = shop.createRow("testRow", deck, [], 1, false);
 			expect(created).to.be.true;
-			expect(shop.rows).to.eql({ testRow: { row: ["Card1"], deck: ["Card1", "Card2"] } });
+			expect(shop.rows).to.eql({
+				testRow: { row: ["Card1"], deck: ["Card1", "Card2"], discard: [] }
+			});
 		});
 		it("should not add a an unknown card", function() {
-			let created = shop.createRow("testRow", ["unknown"], 1, false);
+			let created = shop.createRow("testRow", ["unknown"], [], 1, false);
 			expect(created).to.be.false;
 			expect(shop.rows).to.be.an("object").and.empty;
 		});
 		it("should not overwrite an existing row", function() {
-			shop.createRow("testRow", deck, 1, false);
-			let created = shop.createRow("testRow", deck, 1, false);
+			shop.createRow("testRow", deck, [], 1, false);
+			let created = shop.createRow("testRow", deck, [], 1, false);
 			expect(created).to.be.false;
-			expect(shop.rows).to.eql({ testRow: { row: ["Card1"], deck: ["Card1", "Card2"] } });
+			expect(shop.rows).to.eql({
+				testRow: { row: ["Card1"], deck: ["Card1", "Card2"], discard: [] }
+			});
 		});
 		it("should shuffle the cards", function() {
 			let stub = sinon.stub(Math, "random").returns(0.5);
-			shop.createRow("testRow", deck, 0);
+			shop.createRow("testRow", deck, [], 0);
 			let shuffled = helper.shuffleCopy(deck);
 			stub.restore();
 			expect(shop.rows.testRow.deck).to.eql(shuffled);
 		});
 		it("should not modify deck", function() {
-			shop.createRow("testRow", deck, 1, false);
-			shop.createRow("testRow2", deck, 2);
+			shop.createRow("testRow", deck, [], 1, false);
+			shop.createRow("testRow2", deck, [], 2);
 			expect(deck).to.eql(["Card1", "Card1", "Card2"]);
 		});
 	});
@@ -94,7 +98,7 @@ describe("Shop", function() {
 			expect(state).to.be.an("object").and.empty;
 		});
 		it("should have censored the row deck cards", function() {
-			shop.createRow("testRow", deck, 1, false);
+			shop.createRow("testRow", deck, [], 1, false);
 			let state = shop.getRowsState();
 			expect(state).to.eql({ testRow: { row: ["Card1"], deck: 2 } });
 		});
@@ -110,7 +114,7 @@ describe("Shop", function() {
 			expect(state).to.eql({ rows: {}, piles: {} });
 		});
 		it("should have a row and a pile in the state after they are created", function() {
-			shop.createRow("testRow", deck, 1, false);
+			shop.createRow("testRow", deck, [], 1, false);
 			shop.createPile("testPile", "Card1", 3);
 			let state = shop.getState();
 			expect(state).to.eql({
@@ -130,12 +134,12 @@ describe("Shop", function() {
 			expect(card).is.null;
 		});
 		it("should return null when trying to get from index larger than row length", function() {
-			shop.createRow("testRow", deck, 1, false);
+			shop.createRow("testRow", deck, [], 1, false);
 			let card = shop.fromRow("testRow", 1, null);
 			expect(card).is.null;
 		});
 		it("should return a card instance", function() {
-			shop.createRow("testRow", deck, 1, false);
+			shop.createRow("testRow", deck, [], 1, false);
 			let card = shop.fromRow("testRow", 0, null);
 			expect(card).is.an.instanceOf(Card1);
 		});
@@ -150,7 +154,7 @@ describe("Shop", function() {
 				}
 			};
 			shop = new Shop({ ...cards, Card3 });
-			shop.createRow("testRow", ["Card3", ...deck], 1, false);
+			shop.createRow("testRow", ["Card3", ...deck], [], 1, false);
 			shop.fromRow("testRow", 0, null);
 			expect(spy.calledOnce).is.true;
 		});

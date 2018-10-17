@@ -54,7 +54,16 @@ module.exports = class Shop {
 		let card = new this._cards[this.rows[row].row[index]]();
 
 		// replace card being taken
-		this.rows[row].row[index] = this.rows[row].deck.shift();
+		let nextCard = this.rows[row].deck.shift();
+		if (nextCard) {
+			this.rows[row].row[index] = nextCard;
+		} else if (this.rows[row].discard.length !== 0) {
+			this.rows[row].deck = helper.shuffleCopy(this.rows[row].discard);
+			this.rows[row].discard = [];
+			this.rows[row].row[index] = this.rows[row].deck.shift();
+		} else {
+			this.rows[row].row.splice(index, 1);
+		}
 
 		// run the cards onAcquire()
 		card.onAcquire(gameState);
@@ -91,13 +100,15 @@ module.exports = class Shop {
 	 * Create a row of cards in the shop, where shop.rows.rowName has properties
 	 *  - {[string]} row
 	 *  - {[string]} deck
+	 *  - {[string]} discard
 	 * @param {string} rowName
 	 * @param {[string]} deck
+	 * @param {[string]} discard
 	 * @param {Number} shown
 	 * @param {boolean} shuffle
 	 * @returns {boolean}
 	 */
-	createRow(rowName, deck, shown, shuffle = true) {
+	createRow(rowName, deck, discard, shown, shuffle = true) {
 		// check rowName doesn't already exist
 		if (this.rows.hasOwnProperty(rowName)) {
 			return false;
@@ -118,7 +129,8 @@ module.exports = class Shop {
 		let row = rowDeck.splice(0, shown);
 
 		// create the row
-		this.rows[rowName] = { row: row, deck: rowDeck };
+		discard = discard || [];
+		this.rows[rowName] = { row: row, deck: rowDeck, discard: discard.slice() };
 		return true;
 	}
 

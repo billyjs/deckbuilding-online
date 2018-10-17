@@ -1,0 +1,114 @@
+{
+  "counters": {
+    "display": [
+      "honour",
+      "runes",
+      "power",
+      "life",
+      "death"
+    ],
+    "x": 36,
+    "y": 21,
+    "width": 15,
+    "height": 12
+  },
+  "piles": {
+    "mystics": {
+      "x": -40,
+      "y": -2
+    },
+    "heavyInfantries": {
+      "x": -35,
+      "y": 0
+    },
+    "cultist": {
+      "x": -30,
+      "y": 2
+    },
+    "templeOfLife": {
+      "x": 30,
+      "y": 2
+    },
+    "templeOfDeath": {
+      "x": 35,
+      "y": 0
+    },
+    "templeOfImmortality": {
+      "x": 40,
+      "y": -2
+    }
+  },
+  "rows": {
+    "centreRow": {
+      "row": {
+        "x": 0,
+        "y": 0
+      },
+      "deck": {
+        "x": 40,
+        "y": 40,
+        "target": "centreDeck"
+      }
+    }
+  },
+  "textures": {
+    "cards": {
+      "small": {
+        "back": "../ascension/cards/small/back.png",
+        "empty": "../ascension/cards/small/empty.png",
+        "undef": "../ascension/cards/small/undef.png",
+        "apprentice": "../ascension/cards/small/apprentice.png",
+        "militia": "../ascension/cards/small/militia.png",
+        "mystic": "../ascension/cards/small/mystic.png",
+        "heavyinfantry": "../ascension/cards/small/heavyInfantry.png",
+        "cultist": "../ascension/cards/small/cultist.png",
+        "templeoflife": "../ascension/cards/small/templeOfLife.png",
+        "templeofdeath": "../ascension/cards/small/templeOfDeath.png",
+        "templeofimmortality": "../ascension/cards/small/templeOfImmortality.png",
+
+        "iku_valleytyrant": "../ascension/cards/small/ikuValleyTyrant.png",
+        "hurras_sea$sfury": "../ascension/cards/small/hurrasSeasFury.png",
+        "kan$zir_theravager": "../ascension/cards/small/kanzirTheRavager.png",
+        "mutatedscavenger": "../ascension/cards/small/mutatedScavenger.png",
+        "cryptlurker": "../ascension/cards/small/cryptLurker.png",
+        "starvedabomination": "../ascension/cards/small/starvedAbomination.png",
+        "hellfrostimps": "../ascension/cards/small/hellfrostImps.png",
+        "cavernhorror": "../ascension/cards/small/cavernHorror.png",
+        "iku$sminions": "../ascension/cards/small/ikusMinions.png",
+        "derangeddirge": "../ascension/cards/small/derangedDirge.png",
+        "beaconofthelost": "../ascension/cards/small/beaconOfTheLost.png",
+        "randall_umbralsage": "../ascension/cards/small/randallUmbralSage.png",
+        "endbringerjora": "../ascension/cards/small/endbringerJora.png",
+        "silencedprophet": "../ascension/cards/small/silencedProphet.png",
+        "soulsnarehunter": "../ascension/cards/small/soulsnareHunter.png",
+        "spitefulgladiator": "../ascension/cards/small/spitefulGladiator.png",
+        "excavationsentry": "../ascension/cards/small/excavationSentry.png",
+        "shadowridgescout": "../ascension/cards/small/shadowridgeScout.png",
+        "pathfinder$stotem": "../ascension/cards/small/pathfindersTotem.png",
+        "asalas_theimpaler": "../ascension/cards/small/asalasTheImpaler.png",
+        "caretakerzahral": "../ascension/cards/small/caretakerZahral.png",
+        "qadimstalker": "../ascension/cards/small/qadimStalker.png",
+        "alosyanguide": "../ascension/cards/small/alosyanGuide.png",
+        "cheerfulconsort": "../ascension/cards/small/cheerfulConsort.png",
+        "ancientstag": "../ascension/cards/small/ancientStag.png",
+        "burialguardian": "../ascension/cards/small/burialGuardian.png",
+        "sirewoodelder": "../ascension/cards/small/sirewoodElder.png"
+      }
+    },
+    "actions": {
+      "undef": "../ascension/actions/undef.png",
+      "play": "../ascension/actions/play.png",
+      "ability": "../ascension/actions/end.png",
+      "temple": "../ascension/actions/buy.png",
+      "buy": "../ascension/actions/primary.png",
+      "attack": "../ascension/actions/primary.png"
+    },
+    "displays": {
+      "yourturn": "../ascension/displays/yourturn.png",
+      "oppturn": "../ascension/displays/oppturn.png",
+      "youwon": "../ascension/displays/youwon.png",
+      "youlost": "../ascension/displays/youlost.png",
+      "wait": "../ascension/displays/wait.png"
+    }
+  }
+}

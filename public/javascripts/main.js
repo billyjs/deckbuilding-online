@@ -173,6 +173,28 @@ function onWindowResize() {
 			child.style.height = p2.y - p1.y + "px";
 		}
 	}
+	if (opponentLabels) {
+		let children = opponentLabels.children;
+		for (let i = 0; i < children.length; i++) {
+			let child = children[i];
+			let height = child.getAttribute("data-height");
+			let width = child.getAttribute("data-width");
+			let p1 = pointToScreen(
+				child.getAttribute("data-x") - width / 2,
+				child.getAttribute("data-y") - height / 2,
+				child.getAttribute("data-z")
+			);
+			let p2 = pointToScreen(
+				parseFloat(child.getAttribute("data-x")) + width / 2,
+				parseFloat(child.getAttribute("data-y")) + height / 2,
+				child.getAttribute("data-z")
+			);
+			child.style.bottom = p1.y + "px";
+			child.style.left = p1.x + "px";
+			child.style.width = p2.x - p1.x + "px";
+			child.style.height = p2.y - p1.y + "px";
+		}
+	}
 }
 
 function animate() {
@@ -223,7 +245,8 @@ function displayDeck(card, self) {
 		card,
 		self ? 39 - CARD_WIDTH : -39 + CARD_WIDTH,
 		(self ? -2 : 2) * SECTION_HEIGHT,
-		null
+		null,
+		self ? labels : opponentLabels
 	);
 }
 
@@ -239,7 +262,8 @@ function displayDiscard(card, self) {
 		card,
 		self ? 40 : -40,
 		(self ? -2 : 2) * SECTION_HEIGHT,
-		null
+		null,
+		self ? labels : opponentLabels
 	);
 }
 
@@ -274,14 +298,14 @@ function displayRow(cards, x, y, target) {
 	return _meshes;
 }
 
-function displayPile(card, x, y, target) {
+function displayPile(card, x, y, target, element) {
 	if (target && meshes.piles[target]) {
 		scene.remove(meshes.piles[target]);
 	}
 	let mesh = displayCard(card, x, y);
 	// display pile count text
 	// const labels = document.getElementById("labels");
-	if (labels && card.count !== undefined) {
+	if (element && card.count !== undefined) {
 		let elem = document.createElement("span");
 		elem.innerHTML = "<p class='large'>" + card.count + "</p>";
 		elem.style.position = "fixed";
@@ -304,7 +328,7 @@ function displayPile(card, x, y, target) {
 		elem.setAttribute("data-z", mesh.position.z);
 		elem.setAttribute("data-height", CARD_HEIGHT.toString());
 		elem.setAttribute("data-width", CARD_WIDTH.toString());
-		labels.appendChild(elem);
+		element.appendChild(elem);
 	}
 
 	if (target) {
@@ -437,8 +461,8 @@ function displayCard(card, x, y) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function displayLabel(x, y, z, width, height, content) {
-	if (!labels) {
+function displayLabel(x, y, z, width, height, content, element) {
+	if (!element) {
 		return;
 	} // if there is no labels variable it is not loaded yet so don't make labels
 	let elem = document.createElement("span");
@@ -455,7 +479,7 @@ function displayLabel(x, y, z, width, height, content) {
 	elem.setAttribute("data-z", z);
 	elem.setAttribute("data-height", height);
 	elem.setAttribute("data-width", width);
-	labels.appendChild(elem);
+	element.appendChild(elem);
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -507,7 +531,11 @@ function clickableMeshes() {
 	Object.keys(meshes).forEach(key => {
 		Object.keys(meshes[key]).forEach(key2 => {
 			if (!Array.isArray(meshes[key][key2])) {
-				if (meshes[key][key2].actions && meshes[key][key2].actions.length !== 0) {
+				if (
+					meshes[key][key2] &&
+					meshes[key][key2].actions &&
+					meshes[key][key2].actions.length !== 0
+				) {
 					clickable.push(meshes[key][key2]);
 					if (meshes[key][key2].menu) {
 						meshes[key][key2].menu.forEach(menuItem => {

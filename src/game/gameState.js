@@ -49,7 +49,7 @@ module.exports = class GameState {
 		if (this._rules.shop) {
 			if (this._rules.shop.rows) {
 				this._rules.shop.rows.forEach(row => {
-					this.shop.createRow(row.name, row.deck, row.shown);
+					this.shop.createRow(row.name, row.deck, row.discard, row.shown);
 				});
 			}
 			if (this._rules.shop.piles) {

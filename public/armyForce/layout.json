@@ -93,9 +93,10 @@
     "actions": {
       "undef": "../armyForce/actions/undef.png",
       "play": "../armyForce/actions/play.png",
-      "choose": "../armyForce/actions/end.png",
-      "recruit": "../armyForce/actions/buy.png",
-      "buy": "../armyForce/actions/primary.png"
+      "choose": "../armyForce/actions/choose.png",
+      "recruit": "../armyForce/actions/recruit.png",
+      "buy": "../armyForce/actions/buy.png",
+      "end": "../armyForce/actions/end.png"
     },
     "displays": {
       "yourturn": "../armyForce/displays/yourturn.png",

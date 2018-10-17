@@ -14,12 +14,12 @@
   },
   "piles": {
     "mystics": {
-      "x": -40,
-      "y": -2
-    },
-    "heavyInfantries": {
       "x": -35,
       "y": 0
+    },
+    "heavyInfantries": {
+      "x": -40,
+      "y": -2
     },
     "cultist": {
       "x": -30,
@@ -98,10 +98,15 @@
     "actions": {
       "undef": "../ascension/actions/undef.png",
       "play": "../ascension/actions/play.png",
-      "ability": "../ascension/actions/end.png",
-      "temple": "../ascension/actions/buy.png",
-      "buy": "../ascension/actions/primary.png",
-      "attack": "../ascension/actions/primary.png"
+      "unite": "../ascension/actions/unite.png",
+      "echo": "../ascension/actions/echo.png",
+      "banish": "../ascension/actions/banish.png",
+      "keystone": "../ascension/actions/keystone.png",
+      "primary": "../ascension/actions/primary.png",
+      "temple": "../ascension/actions/temple.png",
+      "buy": "../ascension/actions/buy.png",
+      "attack": "../ascension/actions/attack.png",
+      "end": "../ascension/actions/end.png"
     },
     "displays": {
       "yourturn": "../ascension/displays/yourturn.png",

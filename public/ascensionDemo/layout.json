@@ -54,9 +54,9 @@
   "textures": {
     "cards": {
       "small": {
-        "back": "../starRealms/cards/small/back.png",
-        "empty": "../starRealms/cards/small/empty.png",
-        "undef": "../starRealms/cards/small/undef.png",
+        "back": "../ascension/cards/small/back.png",
+        "empty": "../ascension/cards/small/empty.png",
+        "undef": "../ascension/cards/small/undef.png",
         "apprentice": "../ascension/cards/small/apprentice.png",
         "militia": "../ascension/cards/small/militia.png",
         "mystic": "../ascension/cards/small/mystic.png",
@@ -96,18 +96,23 @@
       }
     },
     "actions": {
-      "undef": "../starRealms/actions/undef.png",
-      "play": "../starRealms/actions/play.png",
-      "end": "../starRealms/actions/end.png",
-      "buy": "../starRealms/actions/buy.png",
-      "primary": "../starRealms/actions/primary.png"
+      "undef": "../ascension/actions/undef.png",
+      "play": "../ascension/actions/play.png",
+      "unite": "../ascension/actions/unite.png",
+      "echo": "../ascension/actions/echo.png",
+      "keystone": "../ascension/actions/keystone.png",
+      "primary": "../ascension/actions/primary.png",
+      "temple": "../ascension/actions/temple.png",
+      "buy": "../ascension/actions/buy.png",
+      "attack": "../ascension/actions/attack.png",
+      "end": "../ascension/actions/end.png"
     },
     "displays": {
-      "yourturn": "../starRealms/displays/yourturn.png",
-      "oppturn": "../starRealms/displays/oppturn.png",
-      "youwon": "../starRealms/displays/youwon.png",
-      "youlost": "../starRealms/displays/youlost.png",
-      "wait": "../starRealms/displays/wait.png"
+      "yourturn": "../ascension/displays/yourturn.png",
+      "oppturn": "../ascension/displays/oppturn.png",
+      "youwon": "../ascension/displays/youwon.png",
+      "youlost": "../ascension/displays/youlost.png",
+      "wait": "../ascension/displays/wait.png"
     }
   }
 }
